@@ -89,3 +89,10 @@ measurements. Every result should cite an artifact or reproducible command.
 - Reference: https://learn.chatgpt.com/docs/agent-approvals-security#network-access. OpenAI documents that workspace-write disables network by default unless enabled, and higher-level managed restrictions remain separate.
 - Status: next-session launch configuration prepared, but live connectivity remains unresolved. Modal authentication is still unverified, the dataset is absent, and no remote job has been submitted.
 - Validation: `bash -n scripts/start_networked_codex.sh` and `git diff --check` passed. The launcher was not executed inside the restricted session.
+
+## 2026-10-14T11:36:09+00:00 — Execution access restored
+
+- The new turn uses unrestricted filesystem access and enabled command networking. DNS resolution succeeded for Modal, PyPI, and Hugging Face.
+- The dedicated Modal profile passed `modal token info` with exit code 0. Credentials and account identifiers were not copied into the repository. No compute job was submitted by this check.
+- The exact proposed checkpoint `google/gemma-4-E4B` is publicly accessible: its metadata reports `gated: false`, and `config.json` downloads without authentication. The resolved model revision is `411aa17b749aa952df1359d2dcea73917a544d9a`; the text hidden size is 2560. Source: https://huggingface.co/google/gemma-4-E4B.
+- The original Mercari TSV remains absent. Dataset provenance and a legitimate acquisition path must be established before the first real-data run.
