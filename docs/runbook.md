@@ -71,7 +71,37 @@ seeds, and a serving API are subsequent stages, subject to evidence and budget.
 
 ## Current environment limitation
 
-At project initialization, this host could not resolve `api.modal.com`,
+At project initialization, the agent shell could not resolve `api.modal.com`,
 `modal.com`, or `pypi.org`. Authentication could not be verified and no Modal job
 was launched. A network-enabled execution environment is needed to progress
 from the prepared runner to actual data and model experiments.
+
+### Start a session with network access
+
+The current agent session has restricted command networking. Its live policy
+cannot be changed from inside the sandbox. The user-level Codex configuration
+has no network override, and this session makes that configuration read-only.
+Assuming this is the cause, start a new session from a normal terminal:
+
+```bash
+bash /home/omnaidu/gemma-tabular-lab/scripts/start_networked_codex.sh
+```
+
+The launcher passes `sandbox_workspace_write.network_access=true` while keeping
+the `workspace-write` filesystem policy. It changes no global configuration,
+approval settings, or WSL DNS settings. Managed restrictions may still prevent
+network access; this setting is a request for the new session, not an override
+of administrator policy.
+
+In the new session, first verify DNS and Modal authentication:
+
+```bash
+python3 -c "import socket; print(socket.getaddrinfo('api.modal.com', 443))"
+MODAL_PROFILE=gemma-tabular-lab modal token info
+```
+
+Then continue the Data and Bounded launches steps above. If DNS still fails in
+the new session, the execution-environment assumption remains unconfirmed;
+compare with the normal terminal before changing host networking.
+
+Reference: [OpenAI agent approvals and security](https://learn.chatgpt.com/docs/agent-approvals-security#network-access).

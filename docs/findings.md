@@ -80,3 +80,12 @@ measurements. Every result should cite an artifact or reproducible command.
 - Microsoft describes VPN, firewall, and host networking interactions that can cause WSL DNS failures. These are possible causes; the exact cause on this machine has not been established.
 - Sources: https://learn.microsoft.com/en-us/windows/wsl/wsl-config and https://learn.microsoft.com/en-us/windows/wsl/troubleshooting.
 - A comparison with DNS resolution in a normal user terminal remains necessary before changing WSL or network settings. No compute job was launched.
+
+## 2026-10-14T11:08:23+00:00 — Agent execution network configuration
+
+- User requested treating the failure as an agent execution-environment problem and fixing that configuration.
+- Observed: the active session has restricted command networking; user-level Codex configuration contains no network override and is read-only in this session. No local managed-configuration file was found at the inspected standard paths; that does not rule out host-injected policy.
+- Prepared `scripts/start_networked_codex.sh`, which requests command network access for a new session and retains the workspace-write filesystem policy. It does not modify the current session, global configuration, approval rules, or WSL settings.
+- Reference: https://learn.chatgpt.com/docs/agent-approvals-security#network-access. OpenAI documents that workspace-write disables network by default unless enabled, and higher-level managed restrictions remain separate.
+- Status: next-session launch configuration prepared, but live connectivity remains unresolved. Modal authentication is still unverified, the dataset is absent, and no remote job has been submitted.
+- Validation: `bash -n scripts/start_networked_codex.sh` and `git diff --check` passed. The launcher was not executed inside the restricted session.
