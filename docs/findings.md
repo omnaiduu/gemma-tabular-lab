@@ -56,3 +56,12 @@ measurements. Every result should cite an artifact or reproducible command.
 - Does the digit head's exponent accuracy translate into useful price error?
 - How much improvement comes from text information versus the output encoding?
 - Are the observed gains reproducible across seeds and price/category slices?
+
+## 2026-10-14T10:46:00+00:00 — Modal access recheck
+
+- User requested another access check and execution attempt.
+- The dedicated Modal profile contains both credential fields; values were not logged.
+- DNS resolution failed for `api.modal.com`, `pypi.org`, and `huggingface.co` with a temporary name-resolution error.
+- The authenticated CLI check timed out after 20 seconds; credential validity remains unverified.
+- The Mercari raw TSV and prepared splits are still absent.
+- No compute job was submitted and no project budget reservation was created.
