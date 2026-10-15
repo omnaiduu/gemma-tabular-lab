@@ -3,6 +3,22 @@
 Append findings as the work proceeds. Separate observations, hypotheses, and
 measurements. Every result should cite an artifact or reproducible command.
 
+## 2026-10-15T08:39:26+00:00 — Kaggle interface confirms selected accelerator
+
+- The user's screenshot shows Kaggle's accelerator menu with GPU T4 x2 checked;
+  that option and the TPU option appear greyed. The screenshot does not establish
+  why they are greyed or whether GPU hardware has been allocated.
+- A read-only API recheck preserves GPU=True, Internet=True, and NvidiaTeslaT4,
+  while the saved notebook still names the CPU Docker image. The saved batch
+  run is complete. GPU quota remains 30 hours allowed, zero used, zero reserved,
+  and has_ever_run=False. These API observations describe the saved run/quota;
+  they do not directly inspect the browser's draft Python process.
+- Evidence: `results/kaggle-ui-recheck.json`. No new session was created, no
+  model weights were downloaded, and no training was started by this recheck.
+- Next discriminator: run the existing environment-check cell in the browser's
+  draft session and inspect its CUDA/device output. Repeating unchanged API
+  submissions has not been justified by this screenshot alone.
+
 ## 2026-10-14 — Project started
 
 - Observation: the user's numerical representation uses categorical signs and
