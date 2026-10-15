@@ -53,6 +53,28 @@ measurements. Every result should cite an artifact or reproducible command.
   the browser draft's environment and Internet settings after stopping that
   session. This is a diagnostic step, not an established remedy.
 
+### 2026-10-15 — Windows browser control established
+
+- The user asked the agent to operate Kaggle's interface. Linux agent-browser
+  could not auto-connect to the user's normal Windows Chrome. Headed Linux
+  launches initially failed before providing DevToolsActivePort; a later launch
+  reached Kaggle, but the user could not see its window. No exact Linux crash
+  cause was established. Exa surfaced similar project issue reports, including
+  https://github.com/vercel-labs/agent-browser/issues/1428; the Snap-specific
+  explanation in that report does not match our Chrome for Testing install.
+- Downloaded official agent-browser v0.32.3 for Windows into the dedicated
+  GemmaTabularLab tools directory. Verified the release SHA256 digest:
+  d27f77cb4ed7120a25f0b60030b306fe6788be0997f5a6baad74f74a2c0ec627.
+- Opened installed Windows Chrome with a dedicated GemmaTabularLab profile and
+  loopback DevTools port 9224. The native Windows agent-browser successfully
+  retrieved Kaggle's sign-in page accessibility snapshot. Existing user Chrome
+  windows/profiles were not closed or copied. The unused Linux session was
+  closed afterward.
+- Browser control now works, but this dedicated browser still needs the user's
+  Kaggle web sign-in. Existing API OAuth credentials do not provide web cookies.
+  No Kaggle settings were changed through this browser yet. No GPU job, model
+  download, or training was started during the browser setup.
+
 ## 2026-10-14 — Project started
 
 - Observation: the user's numerical representation uses categorical signs and
