@@ -1,0 +1,141 @@
+{
+  "seed": 42,
+  "models": {
+    "median": {
+      "test": {
+        "n": 1000,
+        "mae": 16.536,
+        "rmsle": 0.7584793801764609,
+        "median_absolute_error": 8.0,
+        "p90_absolute_error": 37.0,
+        "factor_two_error_rate": 0.351
+      }
+    },
+    "structured_tree": {
+      "validation_trials": [
+        {
+          "trial": 0,
+          "validation": {
+            "n": 1000,
+            "mae": 12.647701718330383,
+            "rmsle": 0.6265128209758962,
+            "median_absolute_error": 6.939823150634766,
+            "p90_absolute_error": 25.617905044555666,
+            "factor_two_error_rate": 0.2695390781563126
+          }
+        },
+        {
+          "trial": 1,
+          "validation": {
+            "n": 1000,
+            "mae": 12.327853452682495,
+            "rmsle": 0.609376215723592,
+            "median_absolute_error": 6.612301826477051,
+            "p90_absolute_error": 24.55919952392578,
+            "factor_two_error_rate": 0.2545090180360721
+          }
+        }
+      ],
+      "test": {
+        "n": 1000,
+        "mae": 14.043476726055145,
+        "rmsle": 0.6114337938716616,
+        "median_absolute_error": 6.984351634979248,
+        "p90_absolute_error": 29.134587001800558,
+        "factor_two_error_rate": 0.265
+      },
+      "tuning_and_training_seconds": 0.7553011290000002,
+      "warm_batch1_p50_ms": 4.5213610000001125,
+      "warm_batch1_p95_ms": 5.251208000000007,
+      "batch_rows_per_second": 130422.71567222515,
+      "device": "CPU",
+      "requested_cores": 4
+    },
+    "text_ridge": {
+      "validation_trials": [
+        {
+          "trial": 0,
+          "validation": {
+            "n": 1000,
+            "mae": 11.409789829698422,
+            "rmsle": 0.5521255273905827,
+            "median_absolute_error": 5.894945671746155,
+            "p90_absolute_error": 24.80154538573889,
+            "factor_two_error_rate": 0.21142284569138275
+          }
+        },
+        {
+          "trial": 1,
+          "validation": {
+            "n": 1000,
+            "mae": 11.398978536636712,
+            "rmsle": 0.556287600073661,
+            "median_absolute_error": 6.04035283260946,
+            "p90_absolute_error": 23.206595384867274,
+            "factor_two_error_rate": 0.20340681362725452
+          }
+        }
+      ],
+      "test": {
+        "n": 1000,
+        "mae": 12.868652120445928,
+        "rmsle": 0.5662141633533883,
+        "median_absolute_error": 6.548803072810365,
+        "p90_absolute_error": 26.79867305897218,
+        "factor_two_error_rate": 0.222
+      },
+      "tuning_and_training_seconds": 1.2977318490000007,
+      "warm_batch1_p50_ms": 5.406002500000007,
+      "warm_batch1_p95_ms": 5.575622500000055,
+      "batch_rows_per_second": 26531.503865865958,
+      "device": "CPU",
+      "requested_cores": 4
+    },
+    "text_tree": {
+      "validation_trials": [
+        {
+          "trial": 0,
+          "validation": {
+            "n": 1000,
+            "mae": 12.211570179462433,
+            "rmsle": 0.6110323153515304,
+            "median_absolute_error": 6.4885406494140625,
+            "p90_absolute_error": 24.487944412231453,
+            "factor_two_error_rate": 0.2575150300601202
+          }
+        },
+        {
+          "trial": 1,
+          "validation": {
+            "n": 1000,
+            "mae": 11.991585763931274,
+            "rmsle": 0.5972374299815915,
+            "median_absolute_error": 6.267406463623047,
+            "p90_absolute_error": 25.318564033508302,
+            "factor_two_error_rate": 0.2545090180360721
+          }
+        }
+      ],
+      "test": {
+        "n": 1000,
+        "mae": 14.055488175868987,
+        "rmsle": 0.6067052874392322,
+        "median_absolute_error": 6.959283351898193,
+        "p90_absolute_error": 29.014220523834236,
+        "factor_two_error_rate": 0.269
+      },
+      "tuning_and_training_seconds": 3.598507764,
+      "warm_batch1_p50_ms": 6.338931000000159,
+      "warm_batch1_p95_ms": 7.272805000000204,
+      "batch_rows_per_second": 18985.092639468287,
+      "device": "CPU",
+      "requested_cores": 4
+    }
+  },
+  "versions": {
+    "numpy": "2.5.4",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "dataset": "mercari_price_suggestion100K",
+  "openml_id": 46660,
+  "version": 1,
+  "description_url": "https://www.openml.org/api/v1/json/data/46660",
+  "download_url": "https://data.openml.org/datasets/0004/46660/dataset_46660.pq",
+  "original_source": "https://www.kaggle.com/c/mercari-price-suggestion-challenge",
+  "declared_licence": "Kaggle",
+  "usage": "Research pilot; original Kaggle terms apply; source rows remain outside Git",
+  "rows": 100000,
+  "columns_exported": [
+    "train_id",
+    "name",
+    "item_description",
+    "category_name",
+    "brand_name",
+    "item_condition_id",
+    "shipping",
+    "price"
+  ],
+  "target": "Original price column; no inverse log transformation applied",
+  "max_abs_log1p_consistency_error": 8.881784197001252e-16,
+  "source_parquet_sha256": "54d523e5685204a7af1ba907949ef5be39f71683ee2e7e8032994d0458ec6fc4",
+  "exported_tsv_sha256": "221e4cd45eec66566a92e2f7bbeef258861d23ef1b2d66cd99cd34bd2e0d1856",
+  "subset_limit": "Published 100K research subset, not the full Kaggle competition training set"
+}

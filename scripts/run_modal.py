@@ -40,12 +40,14 @@ def make_function(stage, volume, timeout):
     if stage != "baselines":
         image = image.pip_install("torch>=2.10,<3", "transformers>=5.5,<6", "peft>=0.19,<1",
                                   "accelerate>=1.10,<2", "safetensors>=0.6,<1")
-    image = image.add_local_dir(ROOT / "src", "/opt/experiment").env({"PYTHONPATH": "/opt/experiment", "HF_HOME": "/work/model-cache"})
+    image = image.env({"PYTHONPATH": "/opt/experiment", "HF_HOME": "/work/model-cache"})
+    image = image.add_local_dir(ROOT / "src", "/opt/experiment")
     app = modal.App("gemma-tabular-lab")
 
     @app.function(image=image, gpu=None if stage == "baselines" else "L40S",
-                  cpu=4, memory=32768, timeout=timeout, startup_timeout=300,
-                  retries=0, max_containers=1, scaledown_window=0, volumes={"/work": volume})
+                  cpu=(4, 4), memory=(32768, 32768), timeout=timeout, startup_timeout=300,
+                  serialized=True, include_source=False,
+                  retries=0, max_containers=1, scaledown_window=2, volumes={"/work": volume})
     def execute(options, run_id):
         import json
         from pathlib import Path
@@ -60,7 +62,8 @@ def make_function(stage, volume, timeout):
                 report = train("/work/data", output, head=options["stage"], adaptation=options["adaptation"],
                                model_id=options["model_id"], revision=options["revision"], seed=options["seed"],
                                steps=options["steps"], max_length=options["max_length"],
-                               numerical_weight=options["numerical_weight"], max_seconds=options["max_seconds"])
+                               numerical_weight=options["numerical_weight"], max_seconds=options["max_seconds"],
+                               batch_size=options["batch_size"])
             return {"report": report, "files": [str(p.relative_to(output)) for p in output.rglob("*") if p.is_file()]}
         finally:
             # Preserve checkpoints and partial reports even if a later stage fails.
@@ -78,11 +81,14 @@ def main():
     parser.add_argument("--revision", default="main")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--steps", type=int, default=300)
+    parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--max-length", type=int, default=256)
     parser.add_argument("--numerical-weight", type=float, default=0.0)
     parser.add_argument("--timeout", type=int, default=3600)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    if args.batch_size <= 0 or args.steps <= 0:
+        parser.error("Training steps and batch size must be positive")
     if not 600 <= args.timeout <= 3600:
         parser.error("A job must be bounded between 600 and 3600 seconds")
     timeout = min(args.timeout, 1200) if args.stage == "baselines" else args.timeout
@@ -108,10 +114,12 @@ def main():
         options = {"stage": args.stage, "adaptation": args.adaptation, "model_id": args.model_id,
                    "revision": args.revision, "seed": args.seed, "steps": args.steps,
                    "max_length": args.max_length, "numerical_weight": args.numerical_weight,
+                   "batch_size": args.batch_size,
                    "max_seconds": timeout - 60}
         record(f"Reserved ${maximum:.2f} worst-case job charges for `{run_id}`. Actual billed cost is not yet known.")
-        with app.run():
-            result = function.remote(options, run_id)
+        with modal.enable_output():
+            with app.run():
+                result = function.remote(options, run_id)
         destination = ROOT / "artifacts" / run_id
         destination.mkdir(parents=True, exist_ok=True)
         for relative in result["files"]:

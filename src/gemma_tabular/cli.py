@@ -26,6 +26,7 @@ def main():
     gpu.add_argument("--model-id", default="google/gemma-4-E4B")
     gpu.add_argument("--revision", default="main")
     gpu.add_argument("--steps", default=300, type=int)
+    gpu.add_argument("--batch-size", default=1, type=int)
     gpu.add_argument("--max-length", default=256, type=int)
     gpu.add_argument("--max-seconds", default=3000, type=int)
     gpu.add_argument("--seed", default=42, type=int)
@@ -40,7 +41,7 @@ def main():
     else:
         from .train import train
         result = train(args.data, args.output, args.head, args.adaptation, args.model_id, args.revision,
-                       args.seed, args.steps, args.max_length, args.numerical_weight, args.max_seconds)
+                       args.seed, args.steps, args.max_length, args.numerical_weight, args.max_seconds, args.batch_size)
     print(json.dumps(result, indent=2))
 
 

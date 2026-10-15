@@ -8,7 +8,7 @@ import sqlite3
 import time
 import uuid
 
-# Rates observed on https://modal.com/pricing on 2026-10-14. Recheck before launches.
+# Rates rechecked on https://modal.com/pricing on 2026-10-15. Recheck before launches.
 GPU_RATES = {"L4": 0.000222, "L40S": 0.000542, "A100-80GB": 0.000694}
 CPU_RATE = 0.0000131
 MEMORY_RATE = 0.00000222

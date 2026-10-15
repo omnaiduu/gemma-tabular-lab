@@ -1,0 +1,29 @@
+{
+  "model_id": "google/gemma-4-E4B",
+  "revision": "411aa17b749aa952df1359d2dcea73917a544d9a",
+  "tokenizer_class": "GemmaTokenizer",
+  "gemma_max_length": 256,
+  "splits": {
+    "train": {
+      "rows": 10000,
+      "median_tokens": 83.0,
+      "p90_tokens": 146.0,
+      "max_tokens": 418,
+      "fraction_over_256_tokens": 0.0196
+    },
+    "validation": {
+      "rows": 1000,
+      "median_tokens": 84.0,
+      "p90_tokens": 148.0,
+      "max_tokens": 361,
+      "fraction_over_256_tokens": 0.013
+    },
+    "test": {
+      "rows": 1000,
+      "median_tokens": 84.0,
+      "p90_tokens": 143.0,
+      "max_tokens": 336,
+      "fraction_over_256_tokens": 0.019
+    }
+  }
+}

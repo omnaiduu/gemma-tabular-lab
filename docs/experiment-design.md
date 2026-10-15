@@ -47,8 +47,11 @@ Head-only adaptation and LoRA adaptation are distinct experimental stages.
 - Frozen Gemma representations with the two output designs.
 - Matched LoRA Gemma runs with the two output designs, if budget permits.
 
-Identical held-out splits, input fields, maximum row-text length, training-row
-subsets, and comparable tuning budgets are required. Fit vocabulary, scaling,
+Identical held-out splits, allowed input fields, training-row subsets, and
+documented tuning budgets are required. Both Gemma heads use the same 256-token
+input limit. Conventional text baselines receive the full allowed text fields;
+this practical resource-budget difference must be disclosed, and a strictly
+matched text-exposure comparison would need another ablation. Fit vocabulary, scaling,
 dimensionality reduction, and category preprocessing only on training data.
 Keep exact duplicate feature records in the same split. Report the cleaning and
 sampling rules. Do not tune using the final test set.

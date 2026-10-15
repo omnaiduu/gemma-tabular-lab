@@ -96,3 +96,68 @@ measurements. Every result should cite an artifact or reproducible command.
 - The dedicated Modal profile passed `modal token info` with exit code 0. Credentials and account identifiers were not copied into the repository. No compute job was submitted by this check.
 - The exact proposed checkpoint `google/gemma-4-E4B` is publicly accessible: its metadata reports `gated: false`, and `config.json` downloads without authentication. The resolved model revision is `411aa17b749aa952df1359d2dcea73917a544d9a`; the text hidden size is 2560. Source: https://huggingface.co/google/gemma-4-E4B.
 - The original Mercari TSV remains absent. Dataset provenance and a legitimate acquisition path must be established before the first real-data run.
+
+## 2026-10-15T04:41:02+00:00 — Pilot resumed and data acquired
+
+- Reverified networking and dedicated Modal authentication. Existing budget ledger has zero allocations before the first launch.
+- Acquired OpenML dataset 46660 version 1, the published Mercari 100K research subset. It includes the original price field, so no inverse target transformation is needed. The published log_price agrees with log1p(price) within 8.89e-16. Provenance and checksums: `results/data-provenance.json`. Data stays excluded from Git; original Kaggle terms apply.
+- Prepared 10,000 training rows and independent 1,000-row validation/test sets. The source has 100,000 valid target rows; duplicate-feature hashes determine split membership before sampling.
+- Rechecked Modal pricing on 2026-10-15; the implemented L40S, CPU, and memory rates still match. CPU/memory hard caps now match budget assumptions.
+- Offline Modal registration exposed two unexecuted-launcher bugs: nested functions require serialized=True, and scaledown_window=0 is invalid. Fixed both, added a registration test using the real SDK, and enabled visible cloud logs. No cloud job was needed to find these errors.
+
+## 2026-10-15T04:41:12+00:00 — Run event
+
+Reserved $0.24 worst-case job charges for `20261015T044104-baselines-3d322c05`. Actual billed cost is not yet known.
+
+## 2026-10-15T04:41:32+00:00 — Run event
+
+Run `20261015T044104-baselines-3d322c05` failed; allocation retained. Inspect Modal logs and billing before another launch.
+
+- First cloud baseline launch built the CPU image, then failed before function execution because an environment image layer followed a local source mount. Moved the environment layer before add_local_dir, as required by Modal. The failed launch retains its $0.24 conservative allocation; image-build billing remains unreconciled.
+
+## 2026-10-15T04:41:57+00:00 — Run event
+
+Reserved $0.24 worst-case job charges for `20261015T044155-baselines-1967a0ed`. Actual billed cost is not yet known.
+
+## 2026-10-15T04:42:01+00:00 — Run event
+
+Run `20261015T044155-baselines-1967a0ed` failed; allocation retained. Inspect Modal logs and billing before another launch.
+
+- The cloud API additionally enforces a two-second minimum scaledown window, stricter than the SDK local check. The second launch failed before a worker ran; its $0.24 allocation is retained. Set scaledown_window=2 before retrying.
+
+## 2026-10-15T04:42:50+00:00 — Run event
+
+Reserved $0.24 worst-case job charges for `20261015T044248-baselines-21e3bb99`. Actual billed cost is not yet known.
+
+## 2026-10-15T04:43:28+00:00 — Run event
+
+Completed `20261015T044248-baselines-21e3bb99`. Metrics: `results/20261015T044248-baselines-21e3bb99.json`. Worst-case allocation remains $0.24; reconcile with actual billing.
+
+## 2026-10-15T04:44:32+00:00 — Run event
+
+Reserved $0.77 worst-case job charges for `20261015T044429-digits-2e766268`. Actual billed cost is not yet known.
+
+## 2026-10-15T04:45:22+00:00 — First real-data baselines completed
+
+- Run report: `results/20261015T044248-baselines-21e3bb99.json`; 10K training examples and a fixed 1K final test set. Two validation-selected trials per trained model family.
+- median: test RMSLE 0.758479, MAE $16.54, factor-two error rate 0.351.
+- structured_tree: test RMSLE 0.611434, MAE $14.04, factor-two error rate 0.265.
+- text_ridge: test RMSLE 0.566214, MAE $12.87, factor-two error rate 0.222.
+- text_tree: test RMSLE 0.606705, MAE $14.06, factor-two error rate 0.269.
+- Text Ridge is the strongest baseline in this first configuration. No Gemma accuracy comparison is available yet.
+- All 19 local tests now pass, with no PyTorch skips. A tiny actual Gemma4 text model with per-layer embeddings also completed digit-head forward/backward on CPU; this validates API wiring, not the full checkpoint or accuracy.
+
+## 2026-10-15T04:45:41+00:00 — Run event
+
+Run `20261015T044429-digits-2e766268` failed; allocation retained. Inspect Modal logs and billing before another launch.
+
+## 2026-10-15T04:50:52+00:00 — GPU account requirement and pilot analysis
+
+- Modal built the GPU dependency image but rejected L40S function creation: a payment method is required. No GPU worker ran and no full Gemma weights were loaded. Official documentation confirms this applies to every GPU type: https://modal.com/docs/guide/gpu. The user was asked to update that account setting; no further GPU attempts were made.
+- Added deterministic minibatches and coverage reporting so the next matched pilot can cover 10K rows in 1,250 steps at batch size eight.
+- All 23 local tests pass. The real Gemma4 integration test includes shared KV layers, per-layer embeddings, non-reentrant checkpointing, and nonzero LoRA gradients for both output heads.
+- The four-significant-digit oracle has zero reconstruction error on the 1K test sample. Several training target slots are nearly constant, so slot accuracy alone would be misleading. Details: `results/pilot-analysis.json`.
+- Saved conventional-model metrics and uncertainty intervals in `results/progress-2026-10-15.md`, a CSV comparison, and a preliminary blog draft. All Gemma accuracy conclusions remain pending.
+- Conservative allocations total $1.49, including failed launches. Actual project billing is not reconciled; workspace billing summaries can lag and are not a reliable project invoice.
+
+- The actual pinned Gemma tokenizer also loads successfully on CPU. Median test input length is 84 tokens; 1.96% of train rows and 1.9% of test rows exceed the fixed 256-token limit. Saved `results/input-length-audit.json` and a public aggregate data manifest.

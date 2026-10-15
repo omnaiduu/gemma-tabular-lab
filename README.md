@@ -1,6 +1,8 @@
 # Gemma tabular numerical prediction experiment
 
-Status: experiment setup; no accuracy results yet.
+Status: conventional baselines measured on the Mercari 100K research subset.
+Gemma GPU execution is blocked until the Modal workspace has a payment method.
+See [initial results](results/progress-2026-10-15.md).
 
 This project tests a proposal from the user: predict a number by selecting its
 sign, mantissa digits, and exponent digits as small categorical decisions. The
@@ -10,7 +12,8 @@ heads. A deterministic formatter reconstructs the numerical prediction.
 The production task is marketplace listing-price estimation. Given a listing's
 title, description, category, brand, condition, and shipping information, predict
 its actual sale price. The first planned dataset is Mercari's historical price
-suggestion dataset. It is an offline benchmark, not a production deployment.
+suggestion dataset, using the published OpenML 100K subset for this pilot.
+It is an offline benchmark, not a production deployment.
 
 ## Read first
 

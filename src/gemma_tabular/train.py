@@ -12,9 +12,21 @@ from .data import read_split
 from .metrics import price_metrics
 
 
+def training_batches(rows, batch_size, seed):
+    """Shuffle each epoch independently while visiting every row once per epoch."""
+    if not rows or batch_size <= 0:
+        raise ValueError("Non-empty rows and a positive batch size are required")
+    rng = random.Random(seed)
+    indices = list(range(len(rows)))
+    while True:
+        rng.shuffle(indices)
+        for offset in range(0, len(indices), batch_size):
+            yield [rows[index] for index in indices[offset:offset + batch_size]]
+
+
 def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="google/gemma-4-E4B",
           revision="main", seed=42, steps=300, max_length=256, numerical_weight=0.0,
-          max_seconds=3000):
+          max_seconds=3000, batch_size=1):
     import numpy as np
     import torch
     from torch.nn import functional as F
@@ -23,7 +35,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
 
     if head not in ("digits", "regression") or adaptation not in ("frozen", "lora"):
         raise ValueError("Unsupported experiment variant")
-    if steps <= 0 or max_length < 32 or max_seconds < 60 or numerical_weight < 0:
+    if steps <= 0 or max_length < 32 or max_seconds < 60 or numerical_weight < 0 or batch_size <= 0:
         raise ValueError("Invalid training bounds")
     if not torch.cuda.is_available():
         raise RuntimeError("The Gemma experiment requires a GPU")
@@ -37,6 +49,8 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
     rows = {split: read_split(data_dir, split) for split in ("train", "validation", "test")}
     log_targets = np.log1p([row["target"] for row in rows["train"]])
     target_mean, target_std = float(log_targets.mean()), max(float(log_targets.std()), 1e-6)
+    print(json.dumps({"event": "loading_model", "model_id": model_id, "revision": revision}), flush=True)
+    load_start = time.monotonic()
     tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -49,6 +63,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         raise RuntimeError("Checkpoint did not expose the expected text backbone; inspect the model before training")
     del root
     torch.cuda.empty_cache()
+    model_load_seconds = time.monotonic() - load_start
     for parameter in backbone.parameters():
         parameter.requires_grad = False
     if adaptation == "lora":
@@ -63,6 +78,8 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         {"params": [p for p in model.backbone.parameters() if p.requires_grad], "lr": 2e-4},
     ], weight_decay=0.01)
     trainable = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+    print(json.dumps({"event": "model_ready", "model_load_seconds": model_load_seconds,
+                      "trainable_parameters": trainable, "gpu": torch.cuda.get_device_name()}), flush=True)
 
     class PredictionDeadline(RuntimeError):
         pass
@@ -93,11 +110,11 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         return values, slot_predictions
 
     validation = random.Random(seed).sample(rows["validation"], min(256, len(rows["validation"])))
-    history, best, completed_steps = [], float("inf"), 0
+    history, best, completed_steps, examples_processed = [], float("inf"), 0, 0
     seen_training_rows = set()
     best_path = output / "head.pt"
-    indices = list(range(len(rows["train"])))
-    random.shuffle(indices)
+    batches = training_batches(rows["train"], batch_size, seed)
+    training_start = time.monotonic()
     for step in range(steps):
         # Leave time for checkpoint saving and reporting; Modal also enforces an outer timeout.
         if time.monotonic() - start > max_seconds - 180:
@@ -105,14 +122,12 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         model.train()
         if adaptation == "frozen":
             model.backbone.eval()
-        if step and step % len(indices) == 0:
-            random.shuffle(indices)
-        example = rows["train"][indices[step % len(indices)]]
-        seen_training_rows.add(example["row_id"])
-        scores = model(**batch([example]))
-        target = torch.tensor([example["target"]], device="cuda", dtype=torch.float32)
+        examples = next(batches)
+        seen_training_rows.update(example["row_id"] for example in examples)
+        scores = model(**batch(examples))
+        target = torch.tensor([example["target"] for example in examples], device="cuda", dtype=torch.float32)
         if head == "digits":
-            categorical_target = torch.tensor([encode(example["target"])], device="cuda", dtype=torch.long)
+            categorical_target = torch.tensor([encode(example["target"]) for example in examples], device="cuda", dtype=torch.long)
             loss = digit_loss(scores, categorical_target, target, numerical_weight)
         else:
             scaled = (torch.log1p(target) - target_mean) / target_std
@@ -124,6 +139,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1.0)
         optimizer.step()
         completed_steps = step + 1
+        examples_processed += len(examples)
         if completed_steps % 100 == 0 or completed_steps == steps:
             try:
                 predicted, _ = predict(validation)
@@ -151,9 +167,14 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         "model_id": model_id, "requested_revision": revision, "resolved_revision": resolved_revision,
         "head": head, "adaptation": adaptation, "seed": seed, "completed_steps": completed_steps,
         "unique_training_rows_seen": len(seen_training_rows), "available_training_rows": len(rows["train"]),
+        "training_batch_size": batch_size, "training_examples_processed": examples_processed,
         "requested_steps": steps, "numerical_weight": numerical_weight,
         "target_log_mean": target_mean, "target_log_std": target_std,
         "max_length": max_length, "trainable_parameters": trainable,
+        "model_load_seconds": model_load_seconds,
+        "training_and_validation_seconds": time.monotonic() - training_start,
+        "backbone_parameters": sum(p.numel() for p in model.backbone.parameters()),
+        "head_parameters": sum(p.numel() for p in model.head.parameters()),
         "gpu": torch.cuda.get_device_name(), "history": history,
         "versions": {name: importlib.metadata.version(name) for name in ("torch", "transformers", "peft", "numpy")},
     }

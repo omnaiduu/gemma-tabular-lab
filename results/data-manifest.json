@@ -1,0 +1,26 @@
+{
+  "source_sha256": "221e4cd45eec66566a92e2f7bbeef258861d23ef1b2d66cd99cd34bd2e0d1856",
+  "seed": 42,
+  "total_source_rows": 100000,
+  "skipped_invalid_targets": 0,
+  "eligible_split_counts": {
+    "train": 80067,
+    "validation": 9797,
+    "test": 10136
+  },
+  "sampled_split_counts": {
+    "train": 10000,
+    "validation": 1000,
+    "test": 1000
+  },
+  "feature_allowlist": [
+    "name",
+    "item_description",
+    "category_name",
+    "brand_name",
+    "item_condition_id",
+    "shipping"
+  ],
+  "target": "price",
+  "duplicate_policy": "normalized-feature hash groups"
+}
