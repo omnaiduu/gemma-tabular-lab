@@ -161,3 +161,11 @@ Run `20261015T044429-digits-2e766268` failed; allocation retained. Inspect Modal
 - Conservative allocations total $1.49, including failed launches. Actual project billing is not reconciled; workspace billing summaries can lag and are not a reliable project invoice.
 
 - The actual pinned Gemma tokenizer also loads successfully on CPU. Median test input length is 84 tokens; 1.96% of train rows and 1.9% of test rows exceed the fixed 256-token limit. Saved `results/input-length-audit.json` and a public aggregate data manifest.
+
+## 2026-10-15T06:10:42+00:00 — Cheaper GPU eligibility checked directly
+
+- At the user's request, checked actual function registration for both T4 and L4 using the dedicated experiment profile. Modal rejected both before any GPU worker started.
+- T4: `Please add a payment method to use T4 GPU functions.`
+- L4: `Please add a payment method to use L4 GPU functions.`
+- Exact responses and conservative probe allocations are saved in `results/gpu-access-recheck.json`. No model weights were loaded and no training ran during these probes.
+- Rechecked official documentation, which continues to require a valid payment method for GPU use: https://modal.com/docs/guide/gpu. The tested cheaper hardware does not avoid this account requirement.

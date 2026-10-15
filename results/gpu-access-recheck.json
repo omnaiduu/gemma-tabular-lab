@@ -1,0 +1,73 @@
+{
+  "checked_at_utc": "2026-10-15T06:09:36+00:00",
+  "profile": "gemma-tabular-lab",
+  "checks": [
+    {
+      "gpu": "T4",
+      "maximum_allocation_usd": 0.04,
+      "function_registered": false,
+      "worker_executed": false,
+      "status": "rejected-or-failed",
+      "error_type": "InvalidError",
+      "error": "Please add a payment method to use T4 GPU functions."
+    },
+    {
+      "gpu": "L4",
+      "maximum_allocation_usd": 0.05,
+      "function_registered": false,
+      "worker_executed": false,
+      "status": "rejected-or-failed",
+      "error_type": "InvalidError",
+      "error": "Please add a payment method to use L4 GPU functions."
+    }
+  ],
+  "sources": [
+    "https://modal.com/docs/guide/gpu",
+    "https://modal.com/pricing"
+  ],
+  "budget": {
+    "authorized_total_usd": 30.0,
+    "overhead_reserve_usd": 5.0,
+    "allocated_worst_case_usd": 1.58,
+    "unallocated_job_budget_usd": 23.42,
+    "actual_billed_spend_usd": null,
+    "reservations": [
+      {
+        "id": "630e5075e81448d3a9e2b8e44da217e8",
+        "name": "20261015T044104-baselines-3d322c05",
+        "maximum_usd": 0.24,
+        "status": "failed-allocation-retained"
+      },
+      {
+        "id": "9e539c5fd89044e8a1e90108d4251e27",
+        "name": "20261015T044155-baselines-1967a0ed",
+        "maximum_usd": 0.24,
+        "status": "failed-allocation-retained"
+      },
+      {
+        "id": "dc292033ce30437f890ab823e1430315",
+        "name": "20261015T044248-baselines-21e3bb99",
+        "maximum_usd": 0.24,
+        "status": "completed"
+      },
+      {
+        "id": "fe21ec0cd18c46be84ad7bc23dcb4f57",
+        "name": "20261015T044429-digits-2e766268",
+        "maximum_usd": 0.77,
+        "status": "failed-allocation-retained"
+      },
+      {
+        "id": "9fbff8335a2a4e2188c0f0eddcb88a2d",
+        "name": "gpu-access-T4-20261015T060936",
+        "maximum_usd": 0.04,
+        "status": "failed-allocation-retained"
+      },
+      {
+        "id": "79a76d53cc5346c6afeef27eb0c8dc73",
+        "name": "gpu-access-L4-20261015T060938",
+        "maximum_usd": 0.05,
+        "status": "failed-allocation-retained"
+      }
+    ]
+  }
+}

@@ -1,9 +1,9 @@
 {
-  "as_of_utc": "2026-10-15T04:49:13+00:00",
+  "as_of_utc": "2026-10-15T06:10:42+00:00",
   "authorized_total_usd": 30.0,
   "overhead_reserve_usd": 5.0,
-  "allocated_worst_case_usd": 1.49,
-  "unallocated_job_budget_usd": 23.51,
+  "allocated_worst_case_usd": 1.58,
+  "unallocated_job_budget_usd": 23.42,
   "actual_billed_spend_usd": null,
   "reservations": [
     {
@@ -29,7 +29,19 @@
       "name": "20261015T044429-digits-2e766268",
       "maximum_usd": 0.77,
       "status": "failed-allocation-retained"
+    },
+    {
+      "id": "9fbff8335a2a4e2188c0f0eddcb88a2d",
+      "name": "gpu-access-T4-20261015T060936",
+      "maximum_usd": 0.04,
+      "status": "failed-allocation-retained"
+    },
+    {
+      "id": "79a76d53cc5346c6afeef27eb0c8dc73",
+      "name": "gpu-access-L4-20261015T060938",
+      "maximum_usd": 0.05,
+      "status": "failed-allocation-retained"
     }
   ],
-  "limitation": "Conservative allocations, including pre-execution failures; actual project charges not reconciled"
+  "limitation": "Conservative allocations, including rejected eligibility probes and pre-execution failures; actual project charges not reconciled"
 }
