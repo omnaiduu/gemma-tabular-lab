@@ -86,6 +86,57 @@ Different CPU/GPU hardware is disclosed. Model names alone are not fair cost
 comparisons. A public historical dataset may have appeared in model pretraining;
 results do not establish generalization to future company transactions.
 
+## E2B and E4B comparison (planned, not yet run)
+
+E4B was the user's original checkpoint choice. The numerical-output design does
+not require that size. Start with E2B to establish memory use and training cost;
+add E4B as a model-size comparison only if GPU access and the remaining budget
+support completing both heads.
+
+| Run | Backbone | Output | Purpose |
+| --- | --- | --- | --- |
+| E2B regression | Gemma 4 E2B | Direct scaled log-price | Smaller-model control |
+| E2B digits | Gemma 4 E2B | Eight parallel categorical slots | Test the user's design on E2B |
+| E4B regression | Gemma 4 E4B | Direct scaled log-price | Measure size effects with a direct head |
+| E4B digits | Gemma 4 E4B | Eight parallel categorical slots | Measure size effects with the digit head |
+
+Each run starts independently from its corresponding pinned pretrained
+checkpoint. Train LoRA adapters and the output head; do not pretrain the full
+backbone. The existing loader accepts a model ID and derives the head input size
+from the checkpoint config. Config access was verified for both models:
+
+- E2B: `google/gemma-4-E2B`, revision
+  `d29ff6b45f081a49ee2733a859c9c9c2d95d1a6f`, hidden size 1536.
+- E4B: `google/gemma-4-E4B`, revision
+  `411aa17b749aa952df1359d2dcea73917a544d9a`, hidden size 2560.
+
+Keep the same 10K training rows, validation/test partitions, row ordering seed,
+256-token limit, LoRA configuration, and training-example exposure. Match
+precision/quantization across sizes when feasible. If precision, hardware, or
+batching must differ, disclose that difference and keep each model's two heads
+matched. A wall-time cutoff that stops one run early prevents claiming equal
+training coverage. Use validation for checkpoint selection; do not select
+whether to run E4B based on final E2B test results.
+
+First perform a bounded 20-step validation-only memory/gradient smoke test.
+Then complete the two E2B runs before reserving compute for the two E4B runs.
+Report MAE/RMSLE, exponent mistakes, peak GPU memory, wall time, and inference
+latency. Compare within each size to test the head design, and within each head
+to test whether a larger backbone adds useful accuracy. E2B failure does not
+establish E4B failure, and E4B success alone does not establish a digit-head gain.
+
+The runner now chooses native FP16 or BF16 on one GPU and supports gradient
+accumulation, configurable evaluation batches, and validation-only smoke runs.
+Its FP16 frozen backbone with FP32 LoRA/head gradients passes tiny real-Gemma4
+CPU tests. Full-model GPU memory fit remains unverified. QLoRA and multi-GPU
+execution still require implementation. Neither full E2B nor E4B training has
+run yet. The initial four runs use one seed and remain a pilot; repeat training
+seeds only if resources permit before making robust claims.
+
+Model references: https://ai.google.dev/gemma/docs/core/model_card_4,
+https://huggingface.co/google/gemma-4-E2B, and
+https://huggingface.co/google/gemma-4-E4B.
+
 ## Improvements to test after the pilot
 
 - Slot cross-entropy compared with a numerical-distance-aware loss.

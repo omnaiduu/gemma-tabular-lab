@@ -169,3 +169,151 @@ Run `20261015T044429-digits-2e766268` failed; allocation retained. Inspect Modal
 - L4: `Please add a payment method to use L4 GPU functions.`
 - Exact responses and conservative probe allocations are saved in `results/gpu-access-recheck.json`. No model weights were loaded and no training ran during these probes.
 - Rechecked official documentation, which continues to require a valid payment method for GPU use: https://modal.com/docs/guide/gpu. The tested cheaper hardware does not avoid this account requirement.
+
+## 2026-10-15 — E2B-first model-size comparison planned
+
+- The user asked whether both E2B and E4B should be trained. Documented a four-run
+  matrix: each backbone with the direct regression control and the user's
+  parallel digit head. E4B tests the benefit of size; it is not required by the
+  proposed output representation.
+- E2B config access was verified: public `google/gemma-4-E2B`, revision
+  `d29ff6b45f081a49ee2733a859c9c9c2d95d1a6f`, hidden size 1536, 35 text
+  layers. E4B remains pinned to its previously recorded revision, hidden size
+  2560, 42 text layers. Neither full checkpoint has been trained.
+- Prioritize a bounded memory smoke test and the two E2B runs. Reserve E4B jobs
+  only if access and budget permit both heads. Keep data, example exposure,
+  validation protocol, and per-model head settings matched; record any precision
+  or hardware differences. Do not use final test results to schedule or tune
+  later experiments.
+- The current runner is single-GPU BF16. Free-GPU FP16/QLoRA support and memory
+  fit remain unverified and require actual implementation/testing. No GPU job or
+  additional compute reservation was made while documenting this plan.
+
+## 2026-10-15 — Kaggle onboarding artifacts prepared
+
+- The user chose Kaggle. Prepared a standalone check notebook and an explicit
+  source-only zip using `scripts/build_kaggle_bundle.py`; no remote repository,
+  notebook, or dataset was published. Copies are saved in both Downloads folders.
+- The check reports library versions, GPU memory/CUDA kernel compatibility, and
+  connection checks for pinned E2B config and Mercari metadata. It does not
+  install packages, download model weights, or train. Runtime startup and the
+  tiny CUDA probe may consume a small amount of the user's free GPU quota.
+- Requested the available accelerator through an optional question. Actual
+  Kaggle GPU allocation, account eligibility, and remaining quota are unverified.
+  The next required evidence is the notebook JSON and quota from Kaggle's UI;
+  manual execution requires no password or API-token disclosure.
+- Ran the script locally on Python 3.12.13 / CPU PyTorch 2.14.1. It correctly
+  reported no local CUDA and successfully fetched both public metadata sources.
+  Validated notebook/source syntax, archive paths, inclusion scope, all SHA256
+  manifest entries, and absence of Modal credential patterns. This is a local
+  setup check, not a real Kaggle or full-model training test.
+- The source bundle excludes credentials, source rows, weights, and checkpoints.
+  Low-memory FP16/QLoRA training remains to be implemented after the actual
+  hardware/software report; the bundle does not claim T4/P100 training readiness.
+- Setup instructions and next steps: `docs/kaggle-quickstart.md`. Official Kaggle
+  notebook settings were rechecked: https://www.kaggle.com/docs/notebooks.
+
+## 2026-10-15 — Autonomous Kaggle execution prepared; sign-in pending
+
+- The user explicitly requested connecting and executing from the agent. Installed
+  the official Kaggle CLI 2.2.4 in the project environment and added an optional
+  `kaggle` dependency group.
+- Checked standard Linux/Windows credential locations and relevant environment
+  variables without printing secret values. No Kaggle token/OAuth credential was
+  present. No running browser with a signed-in Kaggle session was available.
+- Used the agent-browser skill to open Kaggle, confirmed the sign-in screen,
+  and started the official CLI OAuth connection. Opened its authorization URL
+  in the user's normal Windows browser as well. Authentication is still pending;
+  a browser sign-in is required before the user's free GPU quota can be used.
+- Prepared `scripts/run_kaggle_preflight.py` to create a unique private notebook,
+  request T4 x2 and a maximum 600-second runtime, poll its status, and download
+  the JSON report. The runner makes one submission, without retries or switching
+  accelerator types. The check does not download weights or train.
+- A local, single-use background watcher waits up to 30 minutes for the official
+  OAuth credentials, then invokes that runner once. Its PID/log and the OAuth
+  login log are stored under `~/.local/state/gemma-tabular-lab`, outside Git.
+  Credentials stay in the official CLI's owner-only credential file. No Kaggle
+  GPU job has been submitted while sign-in is pending.
+- Dry-run and fake-client checks verified private/T4/timeout settings, rejection
+  without retry, and refusal to submit a public notebook. This validates the
+  local launcher logic, not actual Kaggle GPU availability or full Gemma training.
+- Source references: https://www.kaggle.com/docs/api and
+  https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels.md.
+
+## 2026-10-15 — Kaggle connected; actual runtime differs from saved settings
+
+- The user completed the official browser connection. OAuth credentials were
+  saved outside Git with mode 0600. Private notebook creation, execution,
+  monitoring, report download, and quota queries now work through the API.
+- The account reports 30 free GPU hours, pay-to-scale disabled, and a reset at
+  2026-10-17 00:00 UTC. The initial quota check reported zero GPU time used or
+  reserved and no past GPU session; later session diagnostics are separate.
+- Three bounded private T4 checks completed as notebooks, but their runtime
+  reports show CPU-only PyTorch 2.11.0, no CUDA, no NVIDIA device files, and no
+  `nvidia-smi`. Both public metadata fetches fail with temporary DNS-resolution
+  errors. Saved GPU/Internet flags are true and the saved machine shape is T4.
+  This establishes a runtime mismatch; it does not establish that the user
+  needs phone verification or that the saved Internet setting is disabled.
+- The second check added explicit notebook accelerator metadata. The third also
+  requested a pinned official Kaggle GPU image, resolved from its GCR manifest.
+  The API still returned the CPU image in kernel metadata. Reports and requested
+  settings are summarized in `results/kaggle-access-check.json` without account
+  identifiers or credentials. No full model weights were downloaded.
+- Kaggle's documented direct Jupyter session API accepts a T4 request and
+  returns a session ID and tokenized Jupyter URL. Readiness operations complete,
+  but the first direct URL/API checks returned HTTP 404. Each inspected session
+  was cancelled in a finally block. A bounded follow-up checks proxy startup
+  delay and the provided Jupyter token parameter; no model training is involved.
+- Opened the private notebook in the user's normal browser and asked what the
+  accelerator control shows. This requests missing provider-side evidence,
+  rather than asking the user to upload or execute the experiment manually.
+
+## 2026-10-15 — E2B FP16 runner prepared and locally verified
+
+- Added native precision selection: T4/P100 use FP16; newer compatible GPUs may
+  use BF16. FP16 training uses autocast and a gradient scaler, with FP32 LoRA
+  parameters and output heads. The base checkpoint remains frozen.
+- Added gradient accumulation, configurable evaluation batch size, validation
+  subset size, and a validation-only mode that does not read the test split.
+  Reports include actual data exposure, skipped optimizer updates, precision,
+  gradient checks, and effective batch size. Quantization remains unimplemented.
+- All 25 local tests pass, including both heads on a tiny real Gemma4 model
+  with an FP16 frozen backbone, FP32 LoRA/head parameters, shared KV, PLE, and
+  non-reentrant checkpointing. This is an implementation test on CPU, not a
+  full E2B GPU memory or accuracy result.
+- Saved SHA256 hashes of the original prepared splits in
+  `results/processed-checksums.json` for exact input verification before GPU
+  training. The fixed 10K/1K/1K split and original baseline results remain the
+  reference. Full Gemma training has not started.
+
+## 2026-10-15 — Direct Kaggle code execution verified; GPU still absent
+
+- The direct Jupyter connection now executes code and retrieves the probe JSON
+  from this workspace. A 404 at its UI landing page was not sufficient to
+  diagnose API failure: its API status endpoint and kernel-creation endpoint
+  work with the provided scoped Jupyter URL token. No Kaggle OAuth token is
+  sent to the Jupyter proxy or embedded in notebook source.
+- The executed direct-session probe still reports CPU-only PyTorch, no NVIDIA
+  devices, and temporary DNS-resolution failures for the fixed public metadata
+  URLs. This rules out the batch notebook wrapper as the only issue. The saved
+  request is T4 x2 with Internet enabled, but physical GPU allocation remains
+  unverified and the cause is unresolved.
+- All diagnostic sessions were cancelled after inspection, including the one
+  that successfully executed code. The three batch notebooks are complete; no
+  model training was launched. Saved the direct report in
+  `results/kaggle-direct-session-check.json` and refreshed quota/status evidence
+  in `results/kaggle-access-check.json`.
+- Further GPU attempts wait for the user's report of Kaggle's own accelerator
+  control. A verification requirement has not been established, so the user was
+  asked what the UI actually shows rather than told to repeat authentication.
+- Official connection/protocol references:
+  https://www.kaggle.com/docs/notebooks,
+  https://jupyter-server.readthedocs.io/en/latest/developers/rest-api.html, and
+  https://jupyter-server.readthedocs.io/en/latest/developers/websocket-protocols.html.
+
+- Loaded the actual pinned E2B tokenizer locally and audited the fixed splits.
+  Test median is 84 tokens; 1.9% exceed 256, matching the previously observed
+  E4B length summary. Saved `results/input-length-audit-e2b.json`. This downloads
+  tokenizer assets only, without full model weights or GPU training.
+- The last quota query still reports zero GPU time used/reserved and all 30
+  hours available. No diagnostic session remains intentionally running.

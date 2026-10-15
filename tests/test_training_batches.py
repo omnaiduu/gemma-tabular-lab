@@ -1,6 +1,6 @@
 import unittest
 
-from gemma_tabular.train import training_batches
+from gemma_tabular.train import select_precision, training_batches
 
 
 class TrainingCoverageTests(unittest.TestCase):
@@ -22,3 +22,13 @@ class TrainingCoverageTests(unittest.TestCase):
         for rows, size in (([], 1), ([1], 0), ([1], -1)):
             with self.subTest(rows=rows, size=size), self.assertRaises(ValueError):
                 next(training_batches(rows, size, 42))
+
+    def test_precision_uses_native_gpu_support(self):
+        self.assertEqual(select_precision("auto", (7, 5)), "fp16")
+        self.assertEqual(select_precision("auto", (6, 0)), "fp16")
+        self.assertEqual(select_precision("auto", (8, 9)), "bf16")
+        self.assertEqual(select_precision("fp16", (8, 9)), "fp16")
+        with self.assertRaises(ValueError):
+            select_precision("bf16", (7, 5))
+        with self.assertRaises(ValueError):
+            select_precision("invalid", (8, 0))

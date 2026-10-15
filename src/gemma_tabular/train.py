@@ -24,9 +24,20 @@ def training_batches(rows, batch_size, seed):
             yield [rows[index] for index in indices[offset:offset + batch_size]]
 
 
+def select_precision(requested, compute_capability):
+    """Select native CUDA arithmetic; older T4/P100 GPUs need FP16."""
+    if requested not in ("auto", "fp16", "bf16"):
+        raise ValueError("Precision must be auto, fp16, or bf16")
+    native_bf16 = compute_capability[0] >= 8
+    if requested == "bf16" and not native_bf16:
+        raise ValueError("This GPU does not support native BF16; use FP16")
+    return ("bf16" if native_bf16 else "fp16") if requested == "auto" else requested
+
+
 def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="google/gemma-4-E4B",
           revision="main", seed=42, steps=300, max_length=256, numerical_weight=0.0,
-          max_seconds=3000, batch_size=1):
+          max_seconds=3000, batch_size=1, precision="auto", eval_batch_size=8,
+          evaluate_test=True, validation_limit=256, accumulation_steps=1):
     import numpy as np
     import torch
     from torch.nn import functional as F
@@ -35,10 +46,14 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
 
     if head not in ("digits", "regression") or adaptation not in ("frozen", "lora"):
         raise ValueError("Unsupported experiment variant")
-    if steps <= 0 or max_length < 32 or max_seconds < 60 or numerical_weight < 0 or batch_size <= 0:
+    if (steps <= 0 or max_length < 32 or max_seconds < 60 or numerical_weight < 0
+            or batch_size <= 0 or eval_batch_size <= 0 or validation_limit <= 0 or accumulation_steps <= 0):
         raise ValueError("Invalid training bounds")
     if not torch.cuda.is_available():
         raise RuntimeError("The Gemma experiment requires a GPU")
+    precision = select_precision(precision, torch.cuda.get_device_capability())
+    compute_dtype = torch.bfloat16 if precision == "bf16" else torch.float16
+    torch.cuda.reset_peak_memory_stats()
     start = time.monotonic()
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -46,7 +61,8 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    rows = {split: read_split(data_dir, split) for split in ("train", "validation", "test")}
+    split_names = ("train", "validation", "test") if evaluate_test else ("train", "validation")
+    rows = {split: read_split(data_dir, split) for split in split_names}
     log_targets = np.log1p([row["target"] for row in rows["train"]])
     target_mean, target_std = float(log_targets.mean()), max(float(log_targets.std()), 1e-6)
     print(json.dumps({"event": "loading_model", "model_id": model_id, "revision": revision}), flush=True)
@@ -55,7 +71,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
-    root = AutoModel.from_pretrained(model_id, revision=revision, dtype=torch.bfloat16,
+    root = AutoModel.from_pretrained(model_id, revision=revision, dtype=compute_dtype,
                                      device_map={"": "cuda"}, attn_implementation="sdpa")
     resolved_revision = getattr(root.config, "_commit_hash", None)
     backbone = getattr(root, "language_model", None)
@@ -77,6 +93,8 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         {"params": model.head.parameters(), "lr": 5e-4},
         {"params": [p for p in model.backbone.parameters() if p.requires_grad], "lr": 2e-4},
     ], weight_decay=0.01)
+    scaler = torch.amp.GradScaler("cuda", enabled=precision == "fp16", init_scale=128.0)
+    trainable_parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
     trainable = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
     print(json.dumps({"event": "model_ready", "model_load_seconds": model_load_seconds,
                       "trainable_parameters": trainable, "gpu": torch.cuda.get_device_name()}), flush=True)
@@ -93,10 +111,11 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         values, slot_predictions = [], []
         model.eval()
         with torch.no_grad():
-            for offset in range(0, len(examples), 8):
+            for offset in range(0, len(examples), eval_batch_size):
                 if time.monotonic() - start > max_seconds - 60:
                     raise PredictionDeadline("Insufficient bounded time for complete evaluation")
-                scores = model(**batch(examples[offset:offset+8]))
+                with torch.autocast("cuda", dtype=compute_dtype):
+                    scores = model(**batch(examples[offset:offset+eval_batch_size]))
                 if head == "digits":
                     choices = torch.stack([s.argmax(-1) for s in scores], dim=1).cpu().tolist()
                     # Marketplace prices are non-negative; sign constraint is part of this task's schema.
@@ -105,16 +124,19 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
                         values.append(decode(choice))
                     slot_predictions.extend(choices)
                 else:
-                    transformed = scores.float().cpu().numpy() * target_std + target_mean
+                    # Keep the bounded exponentiation finite even for extreme
+                    # predictions; exp(230) exceeds float32's numeric range.
+                    transformed = scores.double().cpu().numpy() * target_std + target_mean
                     values.extend(np.maximum(0, np.expm1(np.clip(transformed, -20, 230))).tolist())
         return values, slot_predictions
 
-    validation = random.Random(seed).sample(rows["validation"], min(256, len(rows["validation"])))
+    validation = random.Random(seed).sample(rows["validation"], min(validation_limit, len(rows["validation"])))
     history, best, completed_steps, examples_processed = [], float("inf"), 0, 0
     seen_training_rows = set()
     best_path = output / "head.pt"
     batches = training_batches(rows["train"], batch_size, seed)
     training_start = time.monotonic()
+    skipped_optimizer_updates, gradient_check = 0, None
     for step in range(steps):
         # Leave time for checkpoint saving and reporting; Modal also enforces an outer timeout.
         if time.monotonic() - start > max_seconds - 180:
@@ -122,31 +144,53 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         model.train()
         if adaptation == "frozen":
             model.backbone.eval()
-        examples = next(batches)
-        seen_training_rows.update(example["row_id"] for example in examples)
-        scores = model(**batch(examples))
-        target = torch.tensor([example["target"] for example in examples], device="cuda", dtype=torch.float32)
-        if head == "digits":
-            categorical_target = torch.tensor([encode(example["target"]) for example in examples], device="cuda", dtype=torch.long)
-            loss = digit_loss(scores, categorical_target, target, numerical_weight)
-        else:
-            scaled = (torch.log1p(target) - target_mean) / target_std
-            loss = F.mse_loss(scores.float(), scaled)
-        if not torch.isfinite(loss):
-            raise RuntimeError("Non-finite training loss")
         optimizer.zero_grad(set_to_none=True)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1.0)
-        optimizer.step()
+        loss_sum = 0.0
+        for _ in range(accumulation_steps):
+            examples = next(batches)
+            seen_training_rows.update(example["row_id"] for example in examples)
+            target = torch.tensor([example["target"] for example in examples], device="cuda", dtype=torch.float32)
+            with torch.autocast("cuda", dtype=compute_dtype):
+                scores = model(**batch(examples))
+                if head == "digits":
+                    categorical_target = torch.tensor([encode(example["target"]) for example in examples], device="cuda", dtype=torch.long)
+                    loss = digit_loss(scores, categorical_target, target, numerical_weight)
+                else:
+                    scaled = (torch.log1p(target) - target_mean) / target_std
+                    loss = F.mse_loss(scores.float(), scaled)
+            if not torch.isfinite(loss):
+                raise RuntimeError("Non-finite training loss")
+            loss_sum += float(loss.detach()) / accumulation_steps
+            scaler.scale(loss / accumulation_steps).backward()
+            examples_processed += len(examples)
+        scaler.unscale_(optimizer)
+        gradient_norm = torch.nn.utils.clip_grad_norm_(trainable_parameters, 1.0)
+        previous_scale = scaler.get_scale()
+        scaler.step(optimizer)
+        scaler.update()
+        if scaler.get_scale() < previous_scale:
+            skipped_optimizer_updates += 1
+        elif gradient_check is None:
+            gradient_check = {
+                "step": step + 1,
+                "finite_gradient_norm": bool(torch.isfinite(gradient_norm)),
+                "head_nonzero_gradient": any(p.grad is not None and bool(p.grad.abs().sum() > 0) for p in model.head.parameters()),
+                "lora_nonzero_gradient": any(p.grad is not None and bool(p.grad.abs().sum() > 0)
+                                             for name, p in model.backbone.named_parameters() if "lora_" in name),
+            }
         completed_steps = step + 1
-        examples_processed += len(examples)
+        if completed_steps == 1 or completed_steps % 20 == 0:
+            print(json.dumps({"event": "training_progress", "step": completed_steps,
+                              "loss": loss_sum, "examples_processed": examples_processed,
+                              "skipped_optimizer_updates": skipped_optimizer_updates,
+                              "elapsed_seconds": time.monotonic() - start}), flush=True)
         if completed_steps % 100 == 0 or completed_steps == steps:
             try:
                 predicted, _ = predict(validation)
             except PredictionDeadline:
                 break
             metrics = price_metrics([row["target"] for row in validation], predicted)
-            history.append({"step": completed_steps, "loss": float(loss.detach()), "validation": metrics})
+            history.append({"step": completed_steps, "loss": loss_sum, "validation": metrics})
             print(json.dumps(history[-1]), flush=True)
             if metrics["rmsle"] < best:
                 best = metrics["rmsle"]
@@ -168,6 +212,12 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         "head": head, "adaptation": adaptation, "seed": seed, "completed_steps": completed_steps,
         "unique_training_rows_seen": len(seen_training_rows), "available_training_rows": len(rows["train"]),
         "training_batch_size": batch_size, "training_examples_processed": examples_processed,
+        "accumulation_steps": accumulation_steps,
+        "effective_batch_size": batch_size * accumulation_steps,
+        "skipped_optimizer_updates": skipped_optimizer_updates,
+        "completed_optimizer_updates": completed_steps - skipped_optimizer_updates,
+        "gradient_check": gradient_check, "precision": precision, "quantization": "none",
+        "validation_rows_used": len(validation),
         "requested_steps": steps, "numerical_weight": numerical_weight,
         "target_log_mean": target_mean, "target_log_std": target_std,
         "max_length": max_length, "trainable_parameters": trainable,
@@ -180,7 +230,9 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
     }
     # Always save the training record before potentially costly final evaluation.
     (output / "training-report.json").write_text(json.dumps(report, indent=2) + "\n")
-    if time.monotonic() - start < max_seconds - 120:
+    if not evaluate_test:
+        report["test_status"] = "not run: validation-only smoke or development run"
+    elif time.monotonic() - start < max_seconds - 120:
         torch.cuda.synchronize()
         evaluation_start = time.perf_counter()
         try:
@@ -194,7 +246,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         torch.cuda.synchronize()
         evaluation_seconds = time.perf_counter() - evaluation_start
         report["test"] = price_metrics([row["target"] for row in rows["test"]], predicted)
-        report["evaluation_batch_size"] = 8
+        report["evaluation_batch_size"] = eval_batch_size
         report["evaluation_rows_per_second"] = len(predicted) / max(evaluation_seconds, 1e-9)
         report["encoding_quantization_metrics"] = price_metrics([row["target"] for row in rows["test"]],
                                                                [decode(encode(row["target"])) for row in rows["test"]])

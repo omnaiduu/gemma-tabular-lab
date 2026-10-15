@@ -1,0 +1,29 @@
+{
+  "model_id": "google/gemma-4-E2B",
+  "revision": "d29ff6b45f081a49ee2733a859c9c9c2d95d1a6f",
+  "max_length": 256,
+  "add_special_tokens": true,
+  "splits": {
+    "train": {
+      "rows": 10000,
+      "median": 83.0,
+      "p90": 146.0,
+      "maximum": 418,
+      "fraction_over_256": 0.0196
+    },
+    "validation": {
+      "rows": 1000,
+      "median": 84.0,
+      "p90": 148.0,
+      "maximum": 361,
+      "fraction_over_256": 0.013
+    },
+    "test": {
+      "rows": 1000,
+      "median": 84.0,
+      "p90": 143.0,
+      "maximum": 336,
+      "fraction_over_256": 0.019
+    }
+  }
+}

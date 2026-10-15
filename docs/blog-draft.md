@@ -100,13 +100,31 @@ including per-layer embeddings, shared KV layers, checkpointing, and LoRA
 gradients. These tests validate the wiring without pretending that random tiny
 weights establish anything about full-model prediction quality.
 
+We then connected Kaggle through its official CLI OAuth flow and completed
+private notebook submissions, status monitoring, and report downloads. The
+account reported 30 hours of free GPU quota. Yet the saved T4/Internet settings
+did not match execution: three batch probes used a CPU image, had no NVIDIA
+devices, and failed external DNS resolution. Explicit notebook metadata and a
+requested GPU image did not resolve it.
+
+Kaggle's documented direct Jupyter connection also worked for executing our
+probe remotely, after preserving its scoped URL token for API calls. Its
+runtime still lacked a GPU and external DNS. This is an unresolved execution
+constraint, not evidence about Gemma accuracy. We cancelled the diagnostic
+sessions and requested the accelerator control's actual UI state before another
+attempt. The experiment journal preserves these failures separately from model
+results.
+
 ## The comparison still to run
 
 After account setup, the next stage is a bounded full-checkpoint smoke test,
 followed by matched LoRA runs that fit the remaining budget. Mini-batching now
 records processed examples and unique rows, so a step count cannot masquerade
-as an epoch. The planned batch size of eight needs 1,250 completed steps to
-visit all 10,000 training rows once.
+as an epoch. An effective batch size of eight needs 1,250 completed updates to
+visit all 10,000 training rows once. On smaller GPUs this can use one-row
+microbatches with eight accumulation steps. The runner records skipped FP16
+scaler updates as well as examples processed; data exposure and optimizer
+updates are distinct.
 
 Both Gemma heads will use the same checkpoint revision, inputs, and token limit.
 The classical text baselines use the full allowed fields, while the initial

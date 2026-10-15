@@ -31,6 +31,11 @@ def main():
     gpu.add_argument("--max-seconds", default=3000, type=int)
     gpu.add_argument("--seed", default=42, type=int)
     gpu.add_argument("--numerical-weight", default=0.0, type=float)
+    gpu.add_argument("--precision", choices=("auto", "fp16", "bf16"), default="auto")
+    gpu.add_argument("--eval-batch-size", default=8, type=int)
+    gpu.add_argument("--accumulation-steps", default=1, type=int)
+    gpu.add_argument("--validation-limit", default=256, type=int)
+    gpu.add_argument("--skip-test", action="store_true")
     args = parser.parse_args()
     if args.command == "prepare":
         from .data import prepare as run
@@ -41,7 +46,10 @@ def main():
     else:
         from .train import train
         result = train(args.data, args.output, args.head, args.adaptation, args.model_id, args.revision,
-                       args.seed, args.steps, args.max_length, args.numerical_weight, args.max_seconds, args.batch_size)
+                       args.seed, args.steps, args.max_length, args.numerical_weight, args.max_seconds, args.batch_size,
+                       precision=args.precision, eval_batch_size=args.eval_batch_size,
+                       accumulation_steps=args.accumulation_steps, validation_limit=args.validation_limit,
+                       evaluate_test=not args.skip_test)
     print(json.dumps(result, indent=2))
 
 

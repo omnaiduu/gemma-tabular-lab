@@ -1,0 +1,183 @@
+{
+  "checked_at_utc": "2026-10-15T07:49:45+00:00",
+  "kaggle_authenticated": true,
+  "full_gemma_training_started": false,
+  "full_model_weights_downloaded": false,
+  "quota_observation": {
+    "total_gpu_hours_allowed": 30,
+    "observed_used_hours_before_session_diagnostics": 0,
+    "observed_reserved_hours_before_session_diagnostics": 0,
+    "pay_to_scale_enabled": false,
+    "refresh_time": "2026-10-17T00:00:00"
+  },
+  "server_metadata_observation": {
+    "private": true,
+    "enable_gpu": true,
+    "enable_internet": true,
+    "machine_shape": "NvidiaTeslaT4",
+    "actual_image": "gcr.io/kaggle-images/python@sha256:81b1e7c4b4f0f2a7e0a33943c95754b1b7af6b30d65221633a284b6b601cd84a"
+  },
+  "root_cause": "Unresolved: saved settings request a GPU and Internet, but batch execution has CPU-only PyTorch, no NVIDIA devices, and DNS failures. No account-verification requirement has been established.",
+  "runs": [
+    {
+      "run_id": "20261015T072508-6e78fa",
+      "requested_gpu": "NvidiaTeslaT4",
+      "requested_internet": true,
+      "private": true,
+      "requested_image": null,
+      "notebook_gpu_metadata": false,
+      "report": {
+        "checked_at_utc": "2026-10-15T07:25:28+00:00",
+        "purpose": "Environment check only; no model training or accuracy measurement",
+        "training_started": false,
+        "model_weights_downloaded": false,
+        "python_version": "3.13.15",
+        "packages": {
+          "torch": "2.11.0+cpu",
+          "transformers": "5.16.1",
+          "peft": "0.20.0",
+          "accelerate": "1.14.0",
+          "bitsandbytes": "not installed",
+          "numpy": "2.1.3",
+          "pandas": "2.3.3",
+          "pyarrow": "23.0.1"
+        },
+        "cuda_available": false,
+        "gpus": [],
+        "network_checks": {
+          "gemma_e2b_config": {
+            "ok": false,
+            "error_type": "URLError"
+          },
+          "mercari_metadata": {
+            "ok": false,
+            "error_type": "URLError"
+          }
+        },
+        "gpu_quota": "Check remaining quota in the Kaggle notebook interface",
+        "torch_cuda_version": null
+      }
+    },
+    {
+      "run_id": "20261015T072947-b63ad2",
+      "requested_gpu": "NvidiaTeslaT4",
+      "requested_internet": true,
+      "private": true,
+      "requested_image": null,
+      "notebook_gpu_metadata": true,
+      "report": {
+        "checked_at_utc": "2026-10-15T07:30:02+00:00",
+        "purpose": "Environment check only; no model training or accuracy measurement",
+        "training_started": false,
+        "model_weights_downloaded": false,
+        "python_version": "3.13.15",
+        "packages": {
+          "torch": "2.11.0+cpu",
+          "transformers": "5.16.1",
+          "peft": "0.20.0",
+          "accelerate": "1.14.0",
+          "bitsandbytes": "not installed",
+          "numpy": "2.1.3",
+          "pandas": "2.3.3",
+          "pyarrow": "23.0.1"
+        },
+        "cuda_available": false,
+        "gpus": [],
+        "network_checks": {
+          "gemma_e2b_config": {
+            "ok": false,
+            "error_type": "URLError",
+            "error_detail": "[Errno -3] Temporary failure in name resolution"
+          },
+          "mercari_metadata": {
+            "ok": false,
+            "error_type": "URLError",
+            "error_detail": "[Errno -3] Temporary failure in name resolution"
+          }
+        },
+        "gpu_quota": "Check remaining quota in the Kaggle notebook interface",
+        "nvidia_device_files": [],
+        "kaggle_working_directory_exists": true,
+        "nvidia_smi": {
+          "available": false
+        },
+        "torch_cuda_version": null,
+        "runtime_checks_passed": false
+      }
+    },
+    {
+      "run_id": "20261015T073347-d1009c",
+      "requested_gpu": "NvidiaTeslaT4",
+      "requested_internet": true,
+      "private": true,
+      "requested_image": "gcr.io/kaggle-gpu-images/python@sha256:2757e0c7d1e0a9cb43da657b97e223c321a98f5014bdf64f44f2f6b083ad2b2f",
+      "notebook_gpu_metadata": true,
+      "report": {
+        "checked_at_utc": "2026-10-15T07:34:04+00:00",
+        "purpose": "Environment check only; no model training or accuracy measurement",
+        "training_started": false,
+        "model_weights_downloaded": false,
+        "python_version": "3.13.15",
+        "packages": {
+          "torch": "2.11.0+cpu",
+          "transformers": "5.16.1",
+          "peft": "0.20.0",
+          "accelerate": "1.14.0",
+          "bitsandbytes": "not installed",
+          "numpy": "2.1.3",
+          "pandas": "2.3.3",
+          "pyarrow": "23.0.1"
+        },
+        "cuda_available": false,
+        "gpus": [],
+        "network_checks": {
+          "gemma_e2b_config": {
+            "ok": false,
+            "error_type": "URLError",
+            "error_detail": "[Errno -3] Temporary failure in name resolution"
+          },
+          "mercari_metadata": {
+            "ok": false,
+            "error_type": "URLError",
+            "error_detail": "[Errno -3] Temporary failure in name resolution"
+          }
+        },
+        "gpu_quota": "Check remaining quota in the Kaggle notebook interface",
+        "nvidia_device_files": [],
+        "kaggle_working_directory_exists": true,
+        "nvidia_smi": {
+          "available": false
+        },
+        "torch_cuda_version": null,
+        "runtime_checks_passed": false
+      }
+    }
+  ],
+  "latest_gpu_quota": {
+    "time_used": "0:00:00",
+    "time_reserved": "0:00:00",
+    "total_time_allowed": "1 day, 6:00:00",
+    "minimum_time_allowed": "1 day, 6:00:00",
+    "is_pay_to_scale_enabled": "False",
+    "has_ever_run": "False"
+  },
+  "batch_statuses": [
+    {
+      "run_id": "20261015T072508-6e78fa",
+      "status": "complete"
+    },
+    {
+      "run_id": "20261015T072947-b63ad2",
+      "status": "complete"
+    },
+    {
+      "run_id": "20261015T073347-d1009c",
+      "status": "complete"
+    }
+  ],
+  "direct_session_summary": {
+    "code_execution_works": true,
+    "runtime_checks_passed": false,
+    "session_cancelled": true
+  }
+}

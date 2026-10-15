@@ -1,0 +1,10 @@
+{
+  "algorithm": "sha256",
+  "description": "Exact prepared files used for the first classical baselines; verify before Gemma runs",
+  "files": {
+    "train.jsonl": "7523100740667c23f8bf5be2c9ec1ec76db96b8db38f8e98309e71a181ad0eb3",
+    "validation.jsonl": "26b44a2789cec4b62539b736b8903bd663867f962afa5e4079e50076dda58a3f",
+    "test.jsonl": "3f8e4d8e37673b456ab42f4848a8730f439e27e91cfee4f61d09025ce6872931",
+    "manifest.json": "1e76af1278cf8e83b88ca8f6f46456a77139766ac634764155e3b9503ce75e0e"
+  }
+}
