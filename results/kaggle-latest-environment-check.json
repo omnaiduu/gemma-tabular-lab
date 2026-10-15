@@ -1,0 +1,64 @@
+{
+  "checked_at_utc": "2026-10-15T08:53:36.735290+00:00",
+  "change": "latest environment; no explicit docker image; explicit SAVE_AND_RUN_ALL",
+  "private": true,
+  "accelerator": "NvidiaTeslaT4",
+  "maximum_runtime_seconds": 180,
+  "training_started": false,
+  "submitted": true,
+  "version_number": 2,
+  "saved_metadata": {
+    "current_version_number": 2,
+    "docker_image": "gcr.io/kaggle-images/python@sha256:81b1e7c4b4f0f2a7e0a33943c95754b1b7af6b30d65221633a284b6b601cd84a",
+    "machine_shape": "NvidiaTeslaT4",
+    "enable_gpu": true,
+    "enable_internet": true
+  },
+  "status_checked_at_utc": "2026-10-15T08:55:24.208453+00:00",
+  "saved_run_status": "KernelWorkerStatus.COMPLETE",
+  "gpu_quota": {
+    "total_time_allowed": "1 day, 6:00:00",
+    "time_used": "0:00:00",
+    "time_reserved": "0:00:00",
+    "has_ever_run": "False"
+  },
+  "report": {
+    "checked_at_utc": "2026-10-15T08:53:52+00:00",
+    "purpose": "Environment check only; no model training or accuracy measurement",
+    "training_started": false,
+    "model_weights_downloaded": false,
+    "python_version": "3.13.15",
+    "packages": {
+      "torch": "2.11.0+cpu",
+      "transformers": "5.16.1",
+      "peft": "0.20.0",
+      "accelerate": "1.14.0",
+      "bitsandbytes": "not installed",
+      "numpy": "2.1.3",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1"
+    },
+    "cuda_available": false,
+    "gpus": [],
+    "network_checks": {
+      "gemma_e2b_config": {
+        "ok": false,
+        "error_type": "URLError",
+        "error_detail": "[Errno -3] Temporary failure in name resolution"
+      },
+      "mercari_metadata": {
+        "ok": false,
+        "error_type": "URLError",
+        "error_detail": "[Errno -3] Temporary failure in name resolution"
+      }
+    },
+    "gpu_quota": "Check remaining quota in the Kaggle notebook interface",
+    "nvidia_device_files": [],
+    "kaggle_working_directory_exists": true,
+    "nvidia_smi": {
+      "available": false
+    },
+    "torch_cuda_version": null,
+    "runtime_checks_passed": false
+  }
+}

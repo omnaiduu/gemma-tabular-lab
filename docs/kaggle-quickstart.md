@@ -28,6 +28,17 @@ GPU quota, but the first batch checks executed on CPU and failed DNS despite
 correctly saved GPU/Internet settings. See `results/kaggle-access-check.json`;
 the cause is still unresolved.
 
+The user's browser Run All report also reproduced the CPU/no-NVIDIA-device/DNS
+failures. One subsequent API diagnostic using the latest environment and no
+explicit image completed with the same result. See
+`results/kaggle-browser-preflight.json` and
+`results/kaggle-latest-environment-check.json`. Do not repeat unchanged API
+submissions or install another PyTorch wheel to address absent GPU devices.
+The next diagnostic is to stop the browser draft session, inspect its original
+versus latest environment and Internet settings, and reselect the accelerator.
+This reset has not yet been tested and is not a confirmed fix. A verification
+requirement should only be reported if Kaggle actually displays one.
+
 The CLI uses its official OAuth scopes. Review the Kaggle authorization screen
 when connecting. No password, refresh token, or API token needs to be sent in
 chat. Reference: https://www.kaggle.com/docs/api and

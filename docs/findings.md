@@ -28,6 +28,31 @@ measurements. Every result should cite an artifact or reproducible command.
 - Evidence: `results/kaggle-run-all-recheck.json`. No new remote session was
   created. The browser cell output is needed to observe this draft execution.
 
+### 2026-10-15T08:43:14+00:00 — Browser preflight confirms the same failure
+
+- The user pasted the newly executed draft report. It independently confirms
+  torch 2.11.0+cpu, CUDA=False, no NVIDIA device files, no nvidia-smi, and DNS
+  failures for both Hugging Face and OpenML. The duplicated dictionary in chat
+  is the same result, not a second independent execution.
+- Saved the report as `results/kaggle-browser-preflight.json`. The selected
+  accelerator in the interface therefore did not establish actual hardware
+  availability. Replacing PyTorch alone cannot create the missing GPU devices.
+- The underlying cause remains unresolved; these observations do not prove an
+  account-verification requirement, exhausted quota, or a global Kaggle outage.
+- Consulted Kaggle's official notebook documentation through Exa. It documents
+  original/latest environment selection, an Internet setting, and session
+  restart when selecting a GPU: https://www.kaggle.com/docs/notebooks.
+- Submitted one changed diagnostic on the existing private notebook: version 2,
+  latest environment, no explicit Docker image, explicit SAVE_AND_RUN_ALL,
+  NvidiaTeslaT4, Internet enabled, and a 180-second execution cap. No training
+  or model download is part of this diagnostic. Its report is recorded in
+  `results/kaggle-latest-environment-check.json`.
+- Version 2 completed and reproduced the same CPU/no-device/DNS failures. The
+  latest-environment request did not fix execution. No further automatic retry
+  is justified without changed provider/session state. Next inspect/reselect
+  the browser draft's environment and Internet settings after stopping that
+  session. This is a diagnostic step, not an established remedy.
+
 ## 2026-10-14 — Project started
 
 - Observation: the user's numerical representation uses categorical signs and
