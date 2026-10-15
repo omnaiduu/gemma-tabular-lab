@@ -19,6 +19,15 @@ measurements. Every result should cite an artifact or reproducible command.
   draft session and inspect its CUDA/device output. Repeating unchanged API
   submissions has not been justified by this screenshot alone.
 
+### 2026-10-15T08:43:39+00:00 — Browser Run All reported by user
+
+- The user clicked Run All in Kaggle. A read-only API check still returns saved
+  version 1 and the earlier preflight timestamp 07:34:04 UTC, with CUDA=False.
+  This is old saved output, not evidence that the newly requested draft execution
+  has completed or failed. Quota still reports zero GPU time used/reserved.
+- Evidence: `results/kaggle-run-all-recheck.json`. No new remote session was
+  created. The browser cell output is needed to observe this draft execution.
+
 ## 2026-10-14 — Project started
 
 - Observation: the user's numerical representation uses categorical signs and
