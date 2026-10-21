@@ -1,38 +1,35 @@
-"""Canonical four-significant-digit scientific notation with eight choices.
+"""Four whole-dollar digits predicted in parallel.
 
-The first mantissa digit includes zero, giving 64 logits across the eight heads.
-Zero is decoded canonically even if the other predicted slots disagree.
+Marketplace prices in this pilot are non-negative and at most $1100.
+Scientific notation left most slots constant. These four slots cover $0 to
+$9999: thousands, hundreds, tens, and ones. Values are rounded half-up to the
+nearest dollar before encoding.
 """
 
-from decimal import Decimal, localcontext
+from decimal import Decimal, ROUND_HALF_UP, localcontext
 import math
 
-SLOT_SIZES = (2, 10, 10, 10, 10, 2, 10, 10)
-SLOT_NAMES = ("sign", "digit_1", "digit_2", "digit_3", "digit_4", "exponent_sign", "exponent_1", "exponent_2")
+SLOT_SIZES = (10, 10, 10, 10)
+SLOT_NAMES = ("thousands", "hundreds", "tens", "ones")
+MAX_DOLLARS = 9999
 
 
 def encode(value: float) -> tuple[int, ...]:
     value = float(value)
-    if not math.isfinite(value):
-        raise ValueError("The target must be finite")
-    if value == 0:
-        return (0,) * 8
+    if not math.isfinite(value) or value < 0:
+        raise ValueError("The target must be a finite non-negative price")
     with localcontext() as context:
         context.prec = 32
-        text = format(Decimal(str(value)), "+.3e")
-    mantissa, exponent_text = text.split("e")
-    exponent = int(exponent_text)
-    if abs(exponent) > 99:
-        raise ValueError("Rounded target exceeds the two-digit exponent range")
-    digits = mantissa[1:].replace(".", "")
-    return (int(mantissa[0] == "-"), *(int(d) for d in digits),
-            int(exponent < 0), abs(exponent) // 10, abs(exponent) % 10)
+        dollars = int(Decimal(str(value)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    if dollars > MAX_DOLLARS:
+        raise ValueError("Rounded price exceeds four dollar digits")
+    return (dollars // 1000, (dollars // 100) % 10, (dollars // 10) % 10, dollars % 10)
 
 
 def validate(slots) -> tuple[int, ...]:
     slots = tuple(slots)
-    if len(slots) != 8:
-        raise ValueError("Expected eight slot choices")
+    if len(slots) != len(SLOT_SIZES):
+        raise ValueError("Expected four dollar-digit choices")
     for choice, size in zip(slots, SLOT_SIZES):
         if not isinstance(choice, int) or isinstance(choice, bool) or not 0 <= choice < size:
             raise ValueError("Invalid categorical slot choice")
@@ -40,16 +37,12 @@ def validate(slots) -> tuple[int, ...]:
 
 
 def format_slots(slots) -> str:
-    slots = validate(slots)
-    if slots[1] == 0:
-        return "+0.000e+00"
-    sign = "-" if slots[0] else "+"
-    exponent_sign = "-" if slots[5] else "+"
-    return f"{sign}{slots[1]}.{slots[2]}{slots[3]}{slots[4]}e{exponent_sign}{slots[6]}{slots[7]}"
+    return "".join(str(slot) for slot in validate(slots))
 
 
 def decode(slots) -> float:
-    return float(format_slots(slots))
+    thousands, hundreds, tens, ones = validate(slots)
+    return float(1000 * thousands + 100 * hundreds + 10 * tens + ones)
 
 
 def quantization_error(value: float) -> float:

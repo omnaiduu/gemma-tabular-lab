@@ -12,33 +12,31 @@ from gemma_tabular.metrics import price_metrics
 
 class CodecTests(unittest.TestCase):
     def test_examples(self):
-        self.assertEqual(format_slots(encode(180000)), "+1.800e+05")
-        self.assertEqual(format_slots(encode(60000)), "+6.000e+04")
-        self.assertEqual(decode(encode(-125.5)), -125.5)
+        self.assertEqual(encode(18), (0, 0, 1, 8))
+        self.assertEqual(format_slots(encode(18)), "0018")
+        self.assertEqual(decode(encode(400)), 400)
+        self.assertEqual(encode(1100), (1, 1, 0, 0))
+        self.assertEqual(decode(encode(10.5)), 11)
 
-    def test_zero_and_prediction_canonicalization(self):
-        self.assertEqual(format_slots(encode(-0.0)), "+0.000e+00")
-        self.assertEqual(decode((1, 0, 8, 9, 7, 1, 5, 6)), 0.0)
+    def test_zero(self):
+        self.assertEqual(encode(0), (0, 0, 0, 0))
+        self.assertEqual(encode(-0.0), (0, 0, 0, 0))
+        self.assertEqual(decode((0, 0, 0, 0)), 0.0)
 
-    def test_rounding_carry(self):
-        self.assertEqual(format_slots(encode(99999)), "+1.000e+05")
-
-    def test_precision_bound_across_orders_of_magnitude(self):
-        for exponent in range(-90, 91, 10):
-            for coefficient in (1.234567, 5.678912, 9.876543):
-                value = coefficient * 10**exponent
-                self.assertLessEqual(abs(decode(encode(value)) - value) / value, 0.0005)
+    def test_prepared_price_range_round_trips(self):
+        for value in (0, 3, 10, 18, 99, 100, 400, 409, 999, 1009, 1100, 9999):
+            self.assertEqual(decode(encode(value)), value)
 
     def test_invalid_numbers_and_overflow_after_rounding(self):
-        for value in (math.nan, math.inf, -math.inf, 1e100, 1e-100, 9.9999e99):
+        for value in (math.nan, math.inf, -math.inf, -1, 10000, 9999.5):
             with self.assertRaises(ValueError):
                 encode(value)
 
     def test_invalid_slots(self):
-        for slots in ((0,)*7, (2,)+(0,)*7, (0, 10)+(0,)*6):
+        for slots in ((0, 0, 0), (10, 0, 0, 0), (-1, 0, 0, 0), (0, 0, 0, True)):
             with self.assertRaises(ValueError):
                 decode(slots)
-        self.assertEqual(sum(SLOT_SIZES), 64)
+        self.assertEqual(sum(SLOT_SIZES), 40)
 
 
 class DataTests(unittest.TestCase):

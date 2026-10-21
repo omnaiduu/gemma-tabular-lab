@@ -36,6 +36,7 @@ def main():
     gpu.add_argument("--accumulation-steps", default=1, type=int)
     gpu.add_argument("--validation-limit", default=256, type=int)
     gpu.add_argument("--skip-test", action="store_true")
+    gpu.add_argument("--cpu-per-layer-embeddings", action="store_true")
     args = parser.parse_args()
     if args.command == "prepare":
         from .data import prepare as run
@@ -49,7 +50,8 @@ def main():
                        args.seed, args.steps, args.max_length, args.numerical_weight, args.max_seconds, args.batch_size,
                        precision=args.precision, eval_batch_size=args.eval_batch_size,
                        accumulation_steps=args.accumulation_steps, validation_limit=args.validation_limit,
-                       evaluate_test=not args.skip_test)
+                       evaluate_test=not args.skip_test,
+                       cpu_per_layer_embeddings=args.cpu_per_layer_embeddings)
     print(json.dumps(result, indent=2))
 
 

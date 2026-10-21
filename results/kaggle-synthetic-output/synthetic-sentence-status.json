@@ -1,0 +1,5 @@
+{
+  "event": "training_started",
+  "steps": 500,
+  "train_rows": 1000
+}

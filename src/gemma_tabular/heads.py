@@ -1,6 +1,5 @@
 """Two task heads reading exactly one pooled Gemma representation."""
 
-import math
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -33,6 +32,8 @@ class NumericalModel(nn.Module):
 
 
 def digit_loss(logits, targets, prices=None, numerical_weight=0.0):
+    if len(logits) != len(SLOT_SIZES):
+        raise ValueError("Digit logits do not match the dollar-digit slots")
     categorical = torch.stack([F.cross_entropy(scores, targets[:, index]) for index, scores in enumerate(logits)]).mean()
     if numerical_weight == 0:
         return categorical
@@ -40,11 +41,10 @@ def digit_loss(logits, targets, prices=None, numerical_weight=0.0):
         raise ValueError("The auxiliary numerical loss is defined for non-negative prices")
     probabilities = [scores.float().softmax(-1) for scores in logits]
     values = torch.arange(10, device=logits[0].device, dtype=torch.float32)
-    mantissa = sum((probabilities[i] * values).sum(-1) / (10 ** (i-1)) for i in range(1, 5))
-    exponent_magnitude = 10 * (probabilities[6] * values).sum(-1) + (probabilities[7] * values).sum(-1)
-    exponent = (probabilities[5][:, 0] - probabilities[5][:, 1]) * exponent_magnitude
-    # Differentiable surrogate, not an assertion of calibrated expected price.
-    log_magnitude = mantissa.clamp_min(1e-8).log() + math.log(10) * exponent
-    soft_log_price = torch.logaddexp(torch.zeros_like(log_magnitude), log_magnitude)
-    numerical = F.smooth_l1_loss(soft_log_price, torch.log1p(prices.float()))
+    expected = torch.zeros(logits[0].shape[0], device=logits[0].device, dtype=torch.float32)
+    place = 1000
+    for scores in probabilities:
+        expected = expected + place * (scores * values).sum(-1)
+        place //= 10
+    numerical = F.smooth_l1_loss(torch.log1p(expected), torch.log1p(prices.float()))
     return categorical + numerical_weight * numerical

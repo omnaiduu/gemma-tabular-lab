@@ -1,0 +1,84 @@
+{
+  "codec": "four whole-dollar digits: thousands, hundreds, tens, ones",
+  "rounding": "half-up to nearest dollar",
+  "range_dollars": [
+    0,
+    9999
+  ],
+  "splits": {
+    "train": {
+      "n": 10000,
+      "min": 0.0,
+      "max": 1100.0,
+      "prices_changed_by_rounding": [
+        10.5
+      ],
+      "majority_digit": {
+        "thousands": {
+          "digit": 0,
+          "share": 0.9998
+        },
+        "hundreds": {
+          "digit": 0,
+          "share": 0.9703
+        },
+        "tens": {
+          "digit": 1,
+          "share": 0.3786
+        },
+        "ones": {
+          "digit": 0,
+          "share": 0.1537
+        }
+      }
+    },
+    "validation": {
+      "n": 1000,
+      "min": 0.0,
+      "max": 409.0,
+      "prices_changed_by_rounding": [],
+      "majority_digit": {
+        "thousands": {
+          "digit": 0,
+          "share": 1.0
+        },
+        "hundreds": {
+          "digit": 0,
+          "share": 0.979
+        },
+        "tens": {
+          "digit": 1,
+          "share": 0.383
+        },
+        "ones": {
+          "digit": 0,
+          "share": 0.155
+        }
+      }
+    },
+    "test": {
+      "n": 1000,
+      "min": 3.0,
+      "max": 400.0,
+      "prices_changed_by_rounding": [],
+      "majority_digit": {
+        "thousands": {
+          "digit": 0,
+          "share": 1.0
+        },
+        "hundreds": {
+          "digit": 0,
+          "share": 0.97
+        },
+        "tens": {
+          "digit": 1,
+          "share": 0.368
+        },
+        "ones": {
+          "digit": 0,
+          "share": 0.161
+        }
+      }
+    }
+  }
+}

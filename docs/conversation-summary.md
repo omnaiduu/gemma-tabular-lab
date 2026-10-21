@@ -82,10 +82,21 @@ The user requested a concrete production-oriented comparison, then authorized:
 
 Credentials are intentionally omitted from this summary and all repository files.
 
-## What is still a hypothesis
+## What was measured on 2026-10-16
 
-We have not established that this Gemma design beats tree models or a direct
-regression head. One backbone pass avoids an autoregressive output loop but
-still requires running the Gemma backbone. Four mantissa digits preserve four
-significant digits, not arbitrary numerical precision. Exponent errors can
-produce large numerical errors. These points require explicit measurement.
+Both Gemma 4 E2B heads finished one matched pass over the 10,000 training rows.
+The direct regression head beat Ridge and beat the four-digit head. The digit
+head did not beat Ridge. Details and the engineering handoff are in
+`docs/findings.md` and `docs/blog-draft.md`. Reports:
+
+- `results/kaggle-pilot-output/e2b-regression-report.json`
+- `results/kaggle-digit-output/e2b-digits-report.json`
+
+One backbone pass still requires running Gemma. Warm single-row prediction is
+about 110 ms on a T4, against about 5.4 ms for Ridge on CPU. E4B regression
+later finished on the same 10,000 rows: test average error $12.65, which did
+not beat E2B. One seed does not establish that the ranking will repeat.
+
+The 21 October follow-up is in `docs/blog.md`. The same Mercari test was
+split by sentence, and a made-up shop was trained from scratch. Short record:
+`docs/learnings-synthetic-sentence.md`.

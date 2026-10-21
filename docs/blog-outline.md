@@ -1,6 +1,9 @@
-# Engineering blog outline — evidence pending
+# Engineering blog outline — draft written
 
-Working title: **Predicting prices with Gemma and categorical digit heads**.
+Working title: **What we learned by asking Gemma to price a marketplace listing**.
+
+The full draft is `docs/blog-draft.md`. It includes the E2B and E4B measured
+results. Do not replace those tables with hypothetical numbers.
 
 1. The business task and available information at prediction time.
 2. The user's question about turning numerical prediction into small choices.
@@ -10,6 +13,7 @@ Working title: **Predicting prices with Gemma and categorical digit heads**.
 6. Strong traditional baselines with and without text features.
 7. Data provenance, split isolation, model/version pinning, and budget constraints.
 8. Measured results: numerical error, severe mistakes, latency, memory, and cost.
+   E2B and E4B evidence is in `results/progress-2026-10-16.md` and the draft.
 9. Failed attempts, negative results, and what changed in the implementation.
 10. Limits of the public benchmark and the next test on fresh company data.
 

@@ -75,6 +75,24 @@ measurements. Every result should cite an artifact or reproducible command.
   No Kaggle settings were changed through this browser yet. No GPU job, model
   download, or training was started during the browser setup.
 
+### 2026-10-15 — Signed-in browser exposes an account-side Internet restriction
+
+- The user completed Kaggle sign-in in the dedicated Windows Chrome window.
+  The agent opened the private notebook editor and used More settings -> Stop
+  session. The interface now reports Draft Session off (run a cell to start).
+- Expanded Session options. The environment already says Always use latest
+  environment. Internet is off, its checkbox is disabled, and the interface
+  offers Get phone verified and Verify identity links.
+- This is new direct interface evidence. It explains why saved API flags cannot
+  be treated as proof of usable Internet. Account verification is the next
+  provider-side condition to inspect. It is not yet proven that verification
+  alone will fix GPU allocation. No verification was completed by the agent.
+- Evidence: `results/kaggle-browser-session-options.json`. No new runtime,
+  model download, or training was started after stopping the old draft.
+- The user requested a very detailed handoff in Downloads at this point. The
+  handoff must preserve this stopped-session state and the pending verification
+  step rather than claim that the experiment is running.
+
 ## 2026-10-14 — Project started
 
 - Observation: the user's numerical representation uses categorical signs and
@@ -389,3 +407,164 @@ Run `20261015T044429-digits-2e766268` failed; allocation retained. Inspect Modal
   tokenizer assets only, without full model weights or GPU training.
 - The last quota query still reports zero GPU time used/reserved and all 30
   hours available. No diagnostic session remains intentionally running.
+- 15 October, later: the digit head no longer uses eight scientific-notation
+  slots. It predicts four whole-dollar digits (thousands, hundreds, tens, ones),
+  covering $0–$9999. Training prices reach $1100; two training prices are $10.50
+  and round half-up to $11. Test prices are already whole dollars. Slot balance
+  is in `results/dollar-digit-codec.json`.
+- 15 October, 10:20 UTC: Kaggle CLI smoke on `ommnaidu/gemma-e2b-regression-smoke`
+  version 4. Two Tesla T4 GPUs were visible. E2B LoRA regression used one T4,
+  peak memory 9.51 GiB, 20 steps, finite head and LoRA gradients. Validation was
+  8 rows only, so its MAE is not a test result. Report:
+  `results/e2b-regression-smoke.json`. The matched 1,250-step pilot was then
+  pushed as private kernel `ommnaidu/gemma-e2b-matched-pilot`.
+
+## 2026-10-16 — Digit head dropped
+
+The four-box digit head lost to the direct price head ($14.81 versus $11.92
+average error) and also lost to Ridge. The user decided to stop that output.
+New runs use the regression head only. The E4B job started the same day is
+regression-only: `ommnaidu/gemma-e4b-price-head`. It finished later the same
+day and did not beat E2B. See the E4B section below.
+
+## 2026-10-16 — Both E2B heads finished
+
+The question was whether LoRA on Gemma, with either a direct price head or
+parallel dollar-digit heads, beats a cheap text model on Mercari prices. E2B
+was chosen before E4B because the output design does not need the larger
+model, and one T4 has about 15 GiB. E4B was left for later. Modal was not used
+for the GPU runs: it still requires a payment method. Kaggle was used after
+the account was phone-verified. The path that worked was the Kaggle CLI from
+WSL, not the browser.
+
+### Why the output changed
+
+The user's original encoding was eight scientific-notation slots, as in
+`+1.800e+05`. On these prices most of those slots never change. The assistant
+kept the user's parallel-digit idea and changed the slots to four whole
+dollars: thousands, hundreds, tens, ones. The regression head was the
+assistant's control, not part of the original digit proposal. Half-up rounding
+is used. Two training prices are $10.50 and become $11. Test prices are
+already whole dollars from $3 to $400.
+
+### What ran
+
+| Run | Kernel | Status | Report |
+| --- | --- | --- | --- |
+| 20-step regression smoke | `ommnaidu/gemma-e2b-regression-smoke` version 4 | Complete | `results/e2b-regression-smoke.json` |
+| Regression, 1,250 steps | `ommnaidu/gemma-e2b-matched-pilot` | Cancelled after this head finished | `results/kaggle-pilot-output/e2b-regression-report.json` |
+| Digits, 1,250 steps | `ommnaidu/gemma-e2b-digit-head` | Complete on 16 October | `results/kaggle-digit-output/e2b-digits-report.json` |
+
+Shared settings: `google/gemma-4-E2B` revision
+`d29ff6b45f081a49ee2733a859c9c9c2d95d1a6f`, LoRA r=8, alpha=16, dropout=0.05
+on q/k/v/o, FP16 backbone, FP32 adapter and head, batch 1 with 8 accumulation
+steps, 256 tokens, seed 42, validation checkpointing on 256 rows by RMSLE,
+then one test pass on 1,000 rows. Torch 2.11.0+cu128, transformers 5.16.1,
+peft 0.20.0. Peak memory 9.51 GiB on one Tesla T4. The second T4 was visible
+and unused. Trainable parameters: regression 2,680,321; digits 2,740,264.
+
+The first pilot was stopped during the digit head, around step 180, because
+the user asked to continue the next day. That session is
+`KernelWorkerStatus.CANCEL_ACKNOWLEDGED`. Its saved digit adapter is only the
+best checkpoint from the interrupted run. It is not the finished digit result.
+The finished digit run is the separate kernel above. It was started fresh
+because the interrupted run did not save optimizer state.
+
+### Test result, 1,000 rows
+
+| Model | RMSLE | MAE, USD | Median AE | p90 AE | Factor-two error | Warm batch-1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| TF-IDF + Ridge | 0.5662 | 12.87 | — | — | 22.2% | 5.41 ms, CPU |
+| E2B regression | 0.5058 | 11.92 | $6.67 | $24.30 | 18.3% | 110 ms, T4 |
+| E2B four digits | 0.6469 | 14.81 | $7.00 | $30.00 | 24.8% | 113 ms, T4 |
+
+Regression's best validation RMSLE was step 1,250 (0.5303). Digits' best
+validation RMSLE was step 500 (0.6458, MAE $12.14). Test scores use those
+checkpoints. Digit validation got worse again late in training; step 1,250
+validation RMSLE was 0.8826.
+
+Digit test slot accuracy was thousands 100%, hundreds 97.1%, tens 40.1%, ones
+16.3%. On the test split the majority digits are already 100%, 97.0%, 36.8%,
+and 16.1% (`results/dollar-digit-codec.json`). The head is barely ahead of
+always guessing the common digit. Dollar error is the score that matters, and
+on that score the digit head loses to both Ridge and the regression head.
+
+### What this does and does not say
+
+The regression head is better than Ridge on this split and seed, by about
+$0.95 MAE and 0.060 RMSLE. It is also about twenty times slower, on a GPU
+rather than a CPU. The digit encoding did not help. One seed, a 256-row
+validation subset, and a public dataset that may have appeared in pretraining
+are all limits. Classical text models saw the full description; 1.9% of Gemma
+test rows are cut at 256 tokens. E4B was trained later the same day, as a
+regression head only, and did not beat this E2B result. Do not launch another
+E4B or digit run from this table.
+
+## 2026-10-21 — Made-up sentence shop, both models trained
+
+1,000 train rows, 200 validation rows, 500 test rows. The test is half
+wording from training and half wording whose content words were held out.
+Ridge and Gemma 4 E2B were both trained. On seen wording the average errors
+are $10.21 and $8.63. On new wording they are $80.00 and $9.21. Ridge's gap
+on the new wording collapses to about $0. Gemma keeps about $144 of a $159
+true gap. The plain conclusion, with the Mercari context and what the run
+does and does not prove, is in `docs/blog-synthetic-sentence.md` under
+Conclusion. Short record: `docs/learnings-synthetic-sentence.md`. Notebook:
+https://www.kaggle.com/code/ommnaidu/gemma-e2b-synthetic-price.
+
+## 2026-10-21 — Made-up sentences, same Ridge
+
+`scripts/synthetic_sentence_gap.py` builds listings that are not Mercari. The
+brand and title stay the same. The price is about $200 when the screen is
+fine and about $40 when it is broken. Ridge uses the same word-and-word-pair
+setup as the real run. Gemma was not trained on these rows. Report:
+`results/synthetic-sentence-gap.json`.
+
+On wording Ridge has seen, “no cracks on the screen” is guessed at $184
+against a true $187, and “has cracks on the screen” at $41 against a true
+$24. On wording Ridge has not seen, “the display is unmarked” and “the
+display is smashed” are both guessed at $74. The true prices are $199 and
+$37. The gap the real Mercari average hides is this one: a new sentence with
+the same product.
+
+## 2026-10-21 — Same test set, split by the sentence
+
+The 1,000 scored Mercari test rows were labeled from the text only, then
+Ridge was fit again with the original recipe. Penalty 1. Overall MAE
+returned at $12.87, matching the saved baseline. E2B guesses were the saved
+file `results/kaggle-pilot-output/e2b-regression/predictions.jsonl`. Report:
+`results/mercari-sentence-slice.json`.
+
+Ordinary rows, 733: Ridge $12.47, E2B $11.50. Any sentence rule, 267: Ridge
+$13.96, E2B $13.07. The mixed hard pile does not widen the gap. Condition
+sentences, 101 rows: Ridge $13.49, E2B $11.58. Bundles, 132 rows: Ridge
+$13.55, E2B $13.98. Long descriptions and unseen words make both models
+worse. The rules overlap. Do not treat the condition-sentence lead as a
+second seed or a hand-labeled test.
+
+### Engineering notes for the next agent
+
+- Do not rerun the Ridge baselines or these two E2B heads unless the user asks
+  for another seed or a changed method.
+- Do not push a new version of `gemma-e2b-matched-pilot`,
+  `gemma-e2b-digit-head`, or `gemma-e4b-price-head`. A push starts training
+  again.
+- Do not rerun the E4B regression unless the method changes. Its test result
+  is already in `results/kaggle-e4b-output/e4b-regression-report.json`.
+- Before any new LoRA run, `pip uninstall -y torchao`. Peft 0.20 fails against
+  the installed torchao 0.10. Do not upgrade Torch to fix that.
+- Kaggle unpacks an uploaded tar. The entry script must find
+  `processed-checksums.json` and copy that source tree. It must not expect one
+  `payload.tar` file.
+- The private dataset is `ommnaidu/gemma-e2b-smoke-files`. Internet must stay
+  on so the notebook can fetch Gemma and OpenML.
+- The pushed kernel id `ommnaidu/gemma-e2b-pilot` is not the live slug. The
+  live regression notebook is `ommnaidu/gemma-e2b-matched-pilot`.
+- `kaggle kernels get` does not return `kernel_session_id`. Cancelling through
+  that field failed once. The pilot later showed `CANCEL_ACKNOWLEDGED`. Do not
+  delete either notebook.
+- Credentials stay in `~/.kaggle/credentials.json`. Do not copy them into the
+  repo or chat. There is no Git remote. Do not push the repo unless asked.
+- `results/kaggle-pilot-output/` also contains a partial Hugging Face cache and
+  a copy of the data. The regression report in that folder is complete. The
+  digit adapter there is the interrupted run.

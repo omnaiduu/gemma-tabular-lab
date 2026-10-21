@@ -1,0 +1,51 @@
+{
+  "made_up": true,
+  "counts": {
+    "train": 1000,
+    "validation": 200,
+    "test": 500
+  },
+  "test_seen": 250,
+  "test_new": 250,
+  "good_train_phrases": [
+    "no cracks on the screen",
+    "screen is not cracked",
+    "no scratches at all",
+    "flawless screen",
+    "glass is perfect",
+    "not a single crack",
+    "mint condition screen",
+    "undamaged glass",
+    "clean screen",
+    "like new screen"
+  ],
+  "bad_train_phrases": [
+    "has cracks on the screen",
+    "screen is cracked",
+    "deep scratches",
+    "shattered glass",
+    "cracked screen",
+    "the screen is broken",
+    "spiderweb crack",
+    "chipped glass",
+    "fractured screen",
+    "split glass"
+  ],
+  "good_new_phrases": [
+    "the display is unmarked",
+    "panel shows zero damage",
+    "face looks untouched",
+    "immaculate front",
+    "spotless and blemish free"
+  ],
+  "bad_new_phrases": [
+    "the display is smashed",
+    "panel is in pieces",
+    "face looks destroyed",
+    "ruined front",
+    "wrecked and crushed"
+  ],
+  "filler": "No box included.",
+  "condition_and_shipping": "identical on every row, so they cannot explain the price",
+  "seed": 42
+}

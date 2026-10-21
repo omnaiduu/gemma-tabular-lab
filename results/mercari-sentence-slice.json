@@ -1,0 +1,187 @@
+{
+  "data_checksums": {
+    "train.jsonl": "7523100740667c23f8bf5be2c9ec1ec76db96b8db38f8e98309e71a181ad0eb3",
+    "validation.jsonl": "26b44a2789cec4b62539b736b8903bd663867f962afa5e4079e50076dda58a3f",
+    "test.jsonl": "3f8e4d8e37673b456ab42f4848a8730f439e27e91cfee4f61d09025ce6872931",
+    "manifest.json": "1e76af1278cf8e83b88ca8f6f46456a77139766ac634764155e3b9503ce75e0e"
+  },
+  "gemma_predictions": "results/kaggle-pilot-output/e2b-regression/predictions.jsonl",
+  "ridge": {
+    "alpha": 1.0,
+    "validation_rmsle": 0.5520636058956079
+  },
+  "rules": {
+    "condition_sentence": "negation or contrast near a defect word, or missing/broken/not working/for parts",
+    "bundle": "bundle, bundled, lot of, set of, or comes with",
+    "long_description": "more than 80 words in the title plus description",
+    "unseen_words": "at least five words absent from the 10,000 training listings",
+    "sentence": "any of the four rules",
+    "ordinary": "none of the four rules",
+    "label_source": "text and training vocabulary only; model error was not used"
+  },
+  "groups": {
+    "all": {
+      "n": 1000,
+      "ridge": {
+        "n": 1000,
+        "mae": 12.86864469575725,
+        "rmsle": 0.5659047828713584,
+        "median_absolute_error": 6.5206025997686154,
+        "p90_absolute_error": 26.71030224603398,
+        "factor_two_error_rate": 0.221
+      },
+      "gemma_e2b": {
+        "n": 1000,
+        "mae": 11.921451380859159,
+        "rmsle": 0.5057982213891437,
+        "median_absolute_error": 6.666677324069987,
+        "p90_absolute_error": 24.30156066928726,
+        "factor_two_error_rate": 0.183
+      }
+    },
+    "ordinary": {
+      "n": 733,
+      "ridge": {
+        "n": 733,
+        "mae": 12.471864503436365,
+        "rmsle": 0.5616590679251113,
+        "median_absolute_error": 6.409367218653337,
+        "p90_absolute_error": 25.30590906277398,
+        "factor_two_error_rate": 0.22373806275579808
+      },
+      "gemma_e2b": {
+        "n": 733,
+        "mae": 11.502269691085562,
+        "rmsle": 0.49931136509238083,
+        "median_absolute_error": 6.800212495027679,
+        "p90_absolute_error": 23.939179708115624,
+        "factor_two_error_rate": 0.1869031377899045
+      }
+    },
+    "sentence": {
+      "n": 267,
+      "ridge": {
+        "n": 267,
+        "mae": 13.957932639469641,
+        "rmsle": 0.5774001438895585,
+        "median_absolute_error": 6.888152402100864,
+        "p90_absolute_error": 34.15142411415424,
+        "factor_two_error_rate": 0.21348314606741572
+      },
+      "gemma_e2b": {
+        "n": 267,
+        "mae": 13.072238566642104,
+        "rmsle": 0.5231933871873532,
+        "median_absolute_error": 6.434660013723331,
+        "p90_absolute_error": 25.35795352585575,
+        "factor_two_error_rate": 0.17228464419475656
+      }
+    },
+    "condition_sentence": {
+      "n": 101,
+      "ridge": {
+        "n": 101,
+        "mae": 13.487100258972752,
+        "rmsle": 0.5753108570057144,
+        "median_absolute_error": 6.615233993802018,
+        "p90_absolute_error": 24.052106759045515,
+        "factor_two_error_rate": 0.18811881188118812
+      },
+      "gemma_e2b": {
+        "n": 101,
+        "mae": 11.584011882747916,
+        "rmsle": 0.45131315603851846,
+        "median_absolute_error": 6.280130841628729,
+        "p90_absolute_error": 22.153702592030385,
+        "factor_two_error_rate": 0.1188118811881188
+      }
+    },
+    "bundle": {
+      "n": 132,
+      "ridge": {
+        "n": 132,
+        "mae": 13.548852677955791,
+        "rmsle": 0.5708484765130156,
+        "median_absolute_error": 7.014820209410265,
+        "p90_absolute_error": 35.06294123309365,
+        "factor_two_error_rate": 0.19696969696969696
+      },
+      "gemma_e2b": {
+        "n": 132,
+        "mae": 13.978868576147738,
+        "rmsle": 0.5443568948514687,
+        "median_absolute_error": 6.754915389475865,
+        "p90_absolute_error": 33.616558358340804,
+        "factor_two_error_rate": 0.21212121212121213
+      }
+    },
+    "long_description": {
+      "n": 67,
+      "ridge": {
+        "n": 67,
+        "mae": 15.094840426748224,
+        "rmsle": 0.5543079198581545,
+        "median_absolute_error": 7.001436476331943,
+        "p90_absolute_error": 37.98518802969251,
+        "factor_two_error_rate": 0.2537313432835821
+      },
+      "gemma_e2b": {
+        "n": 67,
+        "mae": 13.799214102363564,
+        "rmsle": 0.5558340415344808,
+        "median_absolute_error": 6.03786348006852,
+        "p90_absolute_error": 26.27595211509028,
+        "factor_two_error_rate": 0.14925373134328357
+      }
+    },
+    "unseen_words": {
+      "n": 35,
+      "ridge": {
+        "n": 35,
+        "mae": 18.82550902087223,
+        "rmsle": 0.6690436766732345,
+        "median_absolute_error": 7.001436476331943,
+        "p90_absolute_error": 42.762602047167306,
+        "factor_two_error_rate": 0.34285714285714286
+      },
+      "gemma_e2b": {
+        "n": 35,
+        "mae": 18.023544088657324,
+        "rmsle": 0.6832231169212425,
+        "median_absolute_error": 8.28523250473444,
+        "p90_absolute_error": 24.06082034098364,
+        "factor_two_error_rate": 0.2
+      }
+    }
+  },
+  "gap": {
+    "all": {
+      "mae_gemma_minus_ridge": -0.947193314898092,
+      "rmsle_gemma_minus_ridge": -0.060106561482214715
+    },
+    "ordinary": {
+      "mae_gemma_minus_ridge": -0.9695948123508025,
+      "rmsle_gemma_minus_ridge": -0.0623477028327305
+    },
+    "sentence": {
+      "mae_gemma_minus_ridge": -0.8856940728275369,
+      "rmsle_gemma_minus_ridge": -0.054206756702205317
+    },
+    "condition_sentence": {
+      "mae_gemma_minus_ridge": -1.9030883762248365,
+      "rmsle_gemma_minus_ridge": -0.12399770096719592
+    },
+    "bundle": {
+      "mae_gemma_minus_ridge": 0.43001589819194663,
+      "rmsle_gemma_minus_ridge": -0.02649158166154697
+    },
+    "long_description": {
+      "mae_gemma_minus_ridge": -1.29562632438466,
+      "rmsle_gemma_minus_ridge": 0.0015261216763262642
+    },
+    "unseen_words": {
+      "mae_gemma_minus_ridge": -0.8019649322149043,
+      "rmsle_gemma_minus_ridge": 0.01417944024800799
+    }
+  }
+}

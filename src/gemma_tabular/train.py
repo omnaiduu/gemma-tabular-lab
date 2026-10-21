@@ -7,7 +7,7 @@ from pathlib import Path
 import random
 import time
 
-from .codec import decode, encode
+from .codec import SLOT_NAMES, SLOT_SIZES, decode, encode
 from .data import read_split
 from .metrics import price_metrics
 
@@ -34,10 +34,110 @@ def select_precision(requested, compute_capability):
     return ("bf16" if native_bf16 else "fp16") if requested == "auto" else requested
 
 
+def _copy_checkpoint_tensor(handle, key, destination):
+    """Copy one checkpoint tensor into existing storage, in small pieces."""
+    if destination.ndim == 0 or destination.numel() * destination.element_size() < 32 * 1024 * 1024:
+        destination.copy_(handle.get_tensor(key).to(device=destination.device, dtype=destination.dtype))
+        return
+    reader = handle.get_slice(key)
+    step = max(1, (32 * 1024 * 1024) // max(destination[0].numel() * destination.element_size(), 1))
+    for start in range(0, destination.shape[0], step):
+        stop = min(start + step, destination.shape[0])
+        destination[start:stop].copy_(reader[start:stop].to(device=destination.device, dtype=destination.dtype))
+
+
+def _load_text_with_cpu_embeddings(model_id, revision, compute_dtype):
+    """Load the text backbone only, leaving the per-layer lookup table on CPU.
+
+    E4B's text weights are about 14 GiB and a T4 has 15 GiB. The per-layer
+    embedding table is a 5.25 GiB lookup. Keeping it on CPU leaves room for
+    the transformer activations. The looked-up rows are copied back to the GPU.
+    """
+    import torch
+    from huggingface_hub import hf_hub_download
+    from safetensors import safe_open
+    from transformers import AutoConfig
+    from transformers.models.gemma4.modeling_gemma4 import Gemma4TextModel, Gemma4TextRotaryEmbedding
+
+    config = AutoConfig.from_pretrained(model_id, revision=revision)
+    text_config = config.get_text_config()
+    with torch.device("meta"):
+        backbone = Gemma4TextModel(text_config)
+
+    def materialize(module, device):
+        for submodule in module.modules():
+            for key, param in list(submodule._parameters.items()):
+                if param is None:
+                    continue
+                submodule._parameters[key] = torch.nn.Parameter(
+                    torch.empty(param.shape, dtype=compute_dtype, device=device),
+                    requires_grad=False,
+                )
+            for key, buf in list(submodule._buffers.items()):
+                if buf is None or key in submodule._non_persistent_buffers_set:
+                    continue
+                submodule._buffers[key] = torch.empty(buf.shape, dtype=compute_dtype, device=device)
+
+    for name, child in list(backbone.named_children()):
+        if name == "rotary_emb":
+            continue
+        materialize(child, "cpu" if name == "embed_tokens_per_layer" else "cuda")
+    for embedding in (backbone.embed_tokens, backbone.embed_tokens_per_layer):
+        embedding.embed_scale = torch.nn.Buffer(
+            torch.tensor(embedding.scalar_embed_scale, device=embedding.weight.device),
+            persistent=False,
+        )
+    backbone.rotary_emb = Gemma4TextRotaryEmbedding(backbone.config, device=torch.device("cuda"))
+    path = hf_hub_download(repo_id=model_id, filename="model.safetensors", revision=revision)
+    prefix = "model.language_model."
+    named = dict(backbone.named_parameters())
+    for module_name, module in backbone.named_modules():
+        for key, tensor in module._buffers.items():
+            if tensor is None or key in module._non_persistent_buffers_set:
+                continue
+            local = f"{module_name}.{key}" if module_name else key
+            named[local] = tensor
+    missing = []
+    with safe_open(path, framework="pt", device="cpu") as handle:
+        available = set(handle.keys())
+        for name, tensor in named.items():
+            key = prefix + name
+            if key not in available:
+                missing.append(name)
+                continue
+            _copy_checkpoint_tensor(handle, key, tensor)
+    if missing:
+        raise RuntimeError("Text checkpoint is missing weights: " + ", ".join(missing[:8]))
+    table = backbone.embed_tokens_per_layer
+
+    def _keep_put(fn, recurse=True):
+        return table
+
+    table._apply = _keep_put
+
+    def get_per_layer_inputs(input_ids, inputs_embeds):
+        if input_ids is None:
+            raise RuntimeError("The CPU embedding lookup needs token ids")
+        values = table(input_ids.detach().to("cpu")).to(
+            device=backbone.embed_tokens.weight.device,
+            dtype=backbone.embed_tokens.weight.dtype,
+        )
+        return values.reshape(
+            *input_ids.shape,
+            backbone.config.num_hidden_layers,
+            backbone.hidden_size_per_layer_input,
+        )
+
+    backbone.get_per_layer_inputs = get_per_layer_inputs
+    backbone.config._commit_hash = getattr(config, "_commit_hash", None)
+    return backbone
+
+
 def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="google/gemma-4-E4B",
           revision="main", seed=42, steps=300, max_length=256, numerical_weight=0.0,
           max_seconds=3000, batch_size=1, precision="auto", eval_batch_size=8,
-          evaluate_test=True, validation_limit=256, accumulation_steps=1):
+          evaluate_test=True, validation_limit=256, accumulation_steps=1,
+          cpu_per_layer_embeddings=False):
     import numpy as np
     import torch
     from torch.nn import functional as F
@@ -71,13 +171,17 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
-    root = AutoModel.from_pretrained(model_id, revision=revision, dtype=compute_dtype,
-                                     device_map={"": "cuda"}, attn_implementation="sdpa")
-    resolved_revision = getattr(root.config, "_commit_hash", None)
-    backbone = getattr(root, "language_model", None)
-    if backbone is None:
-        raise RuntimeError("Checkpoint did not expose the expected text backbone; inspect the model before training")
-    del root
+    if cpu_per_layer_embeddings:
+        backbone = _load_text_with_cpu_embeddings(model_id, revision, compute_dtype)
+        resolved_revision = getattr(backbone.config, "_commit_hash", None)
+    else:
+        root = AutoModel.from_pretrained(model_id, revision=revision, dtype=compute_dtype,
+                                         device_map={"": "cuda"}, attn_implementation="sdpa")
+        resolved_revision = getattr(root.config, "_commit_hash", None)
+        backbone = getattr(root, "language_model", None)
+        if backbone is None:
+            raise RuntimeError("Checkpoint did not expose the expected text backbone; inspect the model before training")
+        del root
     torch.cuda.empty_cache()
     model_load_seconds = time.monotonic() - load_start
     for parameter in backbone.parameters():
@@ -118,10 +222,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
                     scores = model(**batch(examples[offset:offset+eval_batch_size]))
                 if head == "digits":
                     choices = torch.stack([s.argmax(-1) for s in scores], dim=1).cpu().tolist()
-                    # Marketplace prices are non-negative; sign constraint is part of this task's schema.
-                    for choice in choices:
-                        choice[0] = 0
-                        values.append(decode(choice))
+                    values.extend(decode(choice) for choice in choices)
                     slot_predictions.extend(choices)
                 else:
                     # Keep the bounded exponentiation finite even for extreme
@@ -217,6 +318,7 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
         "skipped_optimizer_updates": skipped_optimizer_updates,
         "completed_optimizer_updates": completed_steps - skipped_optimizer_updates,
         "gradient_check": gradient_check, "precision": precision, "quantization": "none",
+        "per_layer_embeddings_device": "cpu" if cpu_per_layer_embeddings else "gpu",
         "validation_rows_used": len(validation),
         "requested_steps": steps, "numerical_weight": numerical_weight,
         "target_log_mean": target_mean, "target_log_std": target_std,
@@ -252,7 +354,8 @@ def train(data_dir, output_dir, head="digits", adaptation="lora", model_id="goog
                                                                [decode(encode(row["target"])) for row in rows["test"]])
         if choices:
             actual_choices = [encode(row["target"]) for row in rows["test"]]
-            report["test_slot_accuracy"] = [sum(a[i] == p[i] for a, p in zip(actual_choices, choices)) / len(choices) for i in range(8)]
+            report["digit_slot_names"] = list(SLOT_NAMES)
+            report["test_slot_accuracy"] = [sum(a[i] == p[i] for a, p in zip(actual_choices, choices)) / len(choices) for i in range(len(SLOT_SIZES))]
         with (output / "predictions.jsonl").open("w") as handle:
             for row, value in zip(rows["test"], predicted):
                 handle.write(json.dumps({"row_id": row["row_id"], "actual": row["target"], "predicted": value,

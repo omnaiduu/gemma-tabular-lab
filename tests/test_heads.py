@@ -24,8 +24,8 @@ class HeadTests(unittest.TestCase):
         model = NumericalModel(backbone, 4, "digits")
         scores = model(torch.tensor([[1, 2, 0], [0, 3, 4]]), torch.tensor([[1, 1, 0], [0, 1, 1]]))
         self.assertEqual(backbone.calls, 1)
-        self.assertEqual([s.shape[-1] for s in scores], [2, 10, 10, 10, 10, 2, 10, 10])
-        loss = digit_loss(scores, torch.zeros((2, 8), dtype=torch.long), torch.tensor([1., 2.]), 0.1)
+        self.assertEqual([s.shape[-1] for s in scores], [10, 10, 10, 10])
+        loss = digit_loss(scores, torch.zeros((2, 4), dtype=torch.long), torch.tensor([1., 2.]), 0.1)
         self.assertTrue(torch.isfinite(loss))
         loss.backward()
         self.assertIsNotNone(model.head.weight.grad)
@@ -69,7 +69,7 @@ class HeadTests(unittest.TestCase):
                                     if parameter.requires_grad))
                 with torch.autocast("cpu", dtype=torch.float16):
                     scores = model(ids, mask)
-                    loss = (digit_loss(scores, torch.zeros(2, 8, dtype=torch.long)) if kind == "digits"
+                    loss = (digit_loss(scores, torch.zeros(2, 4, dtype=torch.long)) if kind == "digits"
                             else F.mse_loss(scores.float(), torch.tensor([0., 1.])))
                 loss.backward()
                 gradients = [p.grad for p in model.parameters() if p.requires_grad and p.grad is not None]
@@ -105,7 +105,7 @@ class HeadTests(unittest.TestCase):
                 backbone.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
                 model = NumericalModel(backbone, 16, kind)
                 scores = model(ids, mask)
-                loss = (digit_loss(scores, torch.zeros(2, 8, dtype=torch.long)) if kind == "digits"
+                loss = (digit_loss(scores, torch.zeros(2, 4, dtype=torch.long)) if kind == "digits"
                         else F.mse_loss(scores, torch.tensor([0., 1.])))
                 self.assertTrue(torch.isfinite(loss))
                 loss.backward()

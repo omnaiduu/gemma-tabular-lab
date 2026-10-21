@@ -1,0 +1,96 @@
+{
+  "made_up": true,
+  "alpha": 1.0,
+  "validation_trials": [
+    {
+      "alpha": 1.0,
+      "validation": {
+        "n": 200,
+        "mae": 6.341687413482629,
+        "rmsle": 0.11701823152053926,
+        "median_absolute_error": 5.574466240119456,
+        "p90_absolute_error": 13.9039345386424,
+        "factor_two_error_rate": 0.0
+      }
+    },
+    {
+      "alpha": 10.0,
+      "validation": {
+        "n": 200,
+        "mae": 22.016564706442875,
+        "rmsle": 0.23085397398646162,
+        "median_absolute_error": 20.077377970945488,
+        "p90_absolute_error": 44.10812415837295,
+        "factor_two_error_rate": 0.0
+      }
+    }
+  ],
+  "groups": {
+    "all": {
+      "n": 500,
+      "mae": 45.10872581086998,
+      "rmsle": 0.5927681607548718,
+      "median_absolute_error": 30.030686416652117,
+      "p90_absolute_error": 119.96786761856248,
+      "factor_two_error_rate": 0.406,
+      "true_gap": 158.944,
+      "ridge_gap": 77.13518420610202,
+      "by_meaning": {
+        "good": {
+          "n": 250,
+          "true_mean": 198.932,
+          "ridge_mean": 138.42200636032615
+        },
+        "bad": {
+          "n": 250,
+          "true_mean": 39.988,
+          "ridge_mean": 61.28682215422412
+        }
+      }
+    },
+    "seen_wording": {
+      "n": 250,
+      "mae": 10.214027477798192,
+      "rmsle": 0.15209430205609567,
+      "median_absolute_error": 7.73191148882459,
+      "p90_absolute_error": 22.416323567792027,
+      "factor_two_error_rate": 0.0,
+      "true_gap": 158.52800000000002,
+      "ridge_gap": 154.91721670008752,
+      "by_meaning": {
+        "good": {
+          "n": 125,
+          "true_mean": 199.104,
+          "ridge_mean": 196.13891987370417
+        },
+        "bad": {
+          "n": 125,
+          "true_mean": 40.576,
+          "ridge_mean": 41.22170317361665
+        }
+      }
+    },
+    "new_wording": {
+      "n": 250,
+      "mae": 80.00342414394176,
+      "rmsle": 0.8243879596958561,
+      "median_absolute_error": 79.33030968874775,
+      "p90_absolute_error": 126.59651487906439,
+      "factor_two_error_rate": 0.812,
+      "true_gap": 159.35999999999999,
+      "ridge_gap": -0.6468482878835147,
+      "by_meaning": {
+        "good": {
+          "n": 125,
+          "true_mean": 198.76,
+          "ridge_mean": 80.70509284694805
+        },
+        "bad": {
+          "n": 125,
+          "true_mean": 39.4,
+          "ridge_mean": 81.35194113483156
+        }
+      }
+    }
+  }
+}

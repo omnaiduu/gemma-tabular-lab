@@ -1,0 +1,235 @@
+{
+  "model_id": "google/gemma-4-E2B",
+  "requested_revision": "d29ff6b45f081a49ee2733a859c9c9c2d95d1a6f",
+  "resolved_revision": "d29ff6b45f081a49ee2733a859c9c9c2d95d1a6f",
+  "head": "digits",
+  "adaptation": "lora",
+  "seed": 42,
+  "completed_steps": 1250,
+  "unique_training_rows_seen": 10000,
+  "available_training_rows": 10000,
+  "training_batch_size": 1,
+  "training_examples_processed": 10000,
+  "accumulation_steps": 8,
+  "effective_batch_size": 8,
+  "skipped_optimizer_updates": 0,
+  "completed_optimizer_updates": 1250,
+  "gradient_check": {
+    "step": 1,
+    "finite_gradient_norm": true,
+    "head_nonzero_gradient": true,
+    "lora_nonzero_gradient": true
+  },
+  "precision": "fp16",
+  "quantization": "none",
+  "validation_rows_used": 256,
+  "requested_steps": 1250,
+  "numerical_weight": 0.0,
+  "target_log_mean": 2.974365256461248,
+  "target_log_std": 0.7535542558620194,
+  "max_length": 256,
+  "trainable_parameters": 2740264,
+  "model_load_seconds": 53.89876950800004,
+  "training_and_validation_seconds": 5385.477239174,
+  "backbone_parameters": 4631248128,
+  "head_parameters": 61480,
+  "gpu": "Tesla T4",
+  "history": [
+    {
+      "step": 100,
+      "loss": 1.6445875465869904,
+      "validation": {
+        "n": 256,
+        "mae": 14.51953125,
+        "rmsle": 0.8045959310975072,
+        "median_absolute_error": 8.0,
+        "p90_absolute_error": 38.5,
+        "factor_two_error_rate": 0.36470588235294116
+      }
+    },
+    {
+      "step": 200,
+      "loss": 0.9821654111146927,
+      "validation": {
+        "n": 256,
+        "mae": 14.69140625,
+        "rmsle": 0.822488403609661,
+        "median_absolute_error": 7.0,
+        "p90_absolute_error": 37.5,
+        "factor_two_error_rate": 0.3764705882352941
+      }
+    },
+    {
+      "step": 300,
+      "loss": 1.1877131536602974,
+      "validation": {
+        "n": 256,
+        "mae": 15.7109375,
+        "rmsle": 1.1873572769301757,
+        "median_absolute_error": 8.0,
+        "p90_absolute_error": 38.0,
+        "factor_two_error_rate": 0.49411764705882355
+      }
+    },
+    {
+      "step": 400,
+      "loss": 1.0455436743795872,
+      "validation": {
+        "n": 256,
+        "mae": 12.87890625,
+        "rmsle": 0.6994636953546609,
+        "median_absolute_error": 6.5,
+        "p90_absolute_error": 35.0,
+        "factor_two_error_rate": 0.3058823529411765
+      }
+    },
+    {
+      "step": 500,
+      "loss": 1.0091326162219048,
+      "validation": {
+        "n": 256,
+        "mae": 12.14453125,
+        "rmsle": 0.6457907961354624,
+        "median_absolute_error": 6.0,
+        "p90_absolute_error": 26.0,
+        "factor_two_error_rate": 0.24313725490196078
+      }
+    },
+    {
+      "step": 600,
+      "loss": 0.8694228753447533,
+      "validation": {
+        "n": 256,
+        "mae": 12.20703125,
+        "rmsle": 0.6782455393725043,
+        "median_absolute_error": 5.5,
+        "p90_absolute_error": 28.5,
+        "factor_two_error_rate": 0.2627450980392157
+      }
+    },
+    {
+      "step": 700,
+      "loss": 0.8754660040140152,
+      "validation": {
+        "n": 256,
+        "mae": 13.62109375,
+        "rmsle": 1.1314391859612936,
+        "median_absolute_error": 9.0,
+        "p90_absolute_error": 30.0,
+        "factor_two_error_rate": 0.39215686274509803
+      }
+    },
+    {
+      "step": 800,
+      "loss": 0.9421692714095116,
+      "validation": {
+        "n": 256,
+        "mae": 11.6484375,
+        "rmsle": 0.6740837049719784,
+        "median_absolute_error": 5.5,
+        "p90_absolute_error": 30.0,
+        "factor_two_error_rate": 0.2235294117647059
+      }
+    },
+    {
+      "step": 900,
+      "loss": 0.855376560240984,
+      "validation": {
+        "n": 256,
+        "mae": 11.64453125,
+        "rmsle": 0.6549219272976948,
+        "median_absolute_error": 6.0,
+        "p90_absolute_error": 31.5,
+        "factor_two_error_rate": 0.27450980392156865
+      }
+    },
+    {
+      "step": 1000,
+      "loss": 1.0315234810113907,
+      "validation": {
+        "n": 256,
+        "mae": 13.25390625,
+        "rmsle": 1.0064948859715022,
+        "median_absolute_error": 8.0,
+        "p90_absolute_error": 30.5,
+        "factor_two_error_rate": 0.3411764705882353
+      }
+    },
+    {
+      "step": 1100,
+      "loss": 1.121257159858942,
+      "validation": {
+        "n": 256,
+        "mae": 11.91015625,
+        "rmsle": 1.0317772462023447,
+        "median_absolute_error": 6.0,
+        "p90_absolute_error": 29.5,
+        "factor_two_error_rate": 0.29411764705882354
+      }
+    },
+    {
+      "step": 1200,
+      "loss": 0.8670747727155685,
+      "validation": {
+        "n": 256,
+        "mae": 11.58984375,
+        "rmsle": 0.6633158217889358,
+        "median_absolute_error": 5.0,
+        "p90_absolute_error": 26.5,
+        "factor_two_error_rate": 0.22745098039215686
+      }
+    },
+    {
+      "step": 1250,
+      "loss": 0.938500314950943,
+      "validation": {
+        "n": 256,
+        "mae": 11.92578125,
+        "rmsle": 0.8826324486403768,
+        "median_absolute_error": 6.0,
+        "p90_absolute_error": 22.0,
+        "factor_two_error_rate": 0.3058823529411765
+      }
+    }
+  ],
+  "versions": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "peft": "0.20.0",
+    "numpy": "2.1.3"
+  },
+  "test": {
+    "n": 1000,
+    "mae": 14.805,
+    "rmsle": 0.6469443067524351,
+    "median_absolute_error": 7.0,
+    "p90_absolute_error": 30.0,
+    "factor_two_error_rate": 0.248
+  },
+  "evaluation_batch_size": 4,
+  "evaluation_rows_per_second": 22.83870384401378,
+  "encoding_quantization_metrics": {
+    "n": 1000,
+    "mae": 0.0,
+    "rmsle": 0.0,
+    "median_absolute_error": 0.0,
+    "p90_absolute_error": 0.0,
+    "factor_two_error_rate": 0.0
+  },
+  "digit_slot_names": [
+    "thousands",
+    "hundreds",
+    "tens",
+    "ones"
+  ],
+  "test_slot_accuracy": [
+    1.0,
+    0.971,
+    0.401,
+    0.163
+  ],
+  "warm_batch1_p50_ms": 113.28679600046598,
+  "warm_batch1_p95_ms": 119.5530543503537,
+  "total_seconds": 5486.764287494,
+  "peak_gpu_memory_gib": 9.507980823516846
+}

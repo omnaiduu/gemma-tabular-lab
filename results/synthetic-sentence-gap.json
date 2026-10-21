@@ -1,0 +1,68 @@
+{
+  "made_up": true,
+  "what_this_is": "Same brand and title. Price is high only when the description says the screen is fine. Ridge trains on one wording and is tested on that wording and on a new wording.",
+  "seen_wording": {
+    "n": 48,
+    "good": {
+      "n": 24,
+      "true_mean": 199.40998889633042,
+      "ridge_mean": 191.56281189484852,
+      "mae": 8.814831053944234
+    },
+    "bad": {
+      "n": 24,
+      "true_mean": 37.82762927443383,
+      "ridge_mean": 41.14951989747694,
+      "mae": 8.032549644392253
+    },
+    "true_gap": 161.5823596218966,
+    "ridge_gap": 150.41329199737157
+  },
+  "new_wording": {
+    "n": 24,
+    "good": {
+      "n": 12,
+      "true_mean": 198.90217299158112,
+      "ridge_mean": 62.87894512784083,
+      "mae": 136.0232278637403
+    },
+    "bad": {
+      "n": 12,
+      "true_mean": 43.25950867733155,
+      "ridge_mean": 86.47683251199844,
+      "mae": 43.21732383466688
+    },
+    "true_gap": 155.64266431424957,
+    "ridge_gap": -23.59788738415761
+  },
+  "examples": [
+    {
+      "split": "seen_wording",
+      "meaning": "good",
+      "description": "no cracks on the screen. Unlocked. Includes a case.",
+      "true_price": 187.19,
+      "ridge_price": 184.39
+    },
+    {
+      "split": "seen_wording",
+      "meaning": "bad",
+      "description": "has cracks on the screen. Unlocked. Includes a case.",
+      "true_price": 24.06,
+      "ridge_price": 41.41
+    },
+    {
+      "split": "new_wording",
+      "meaning": "good",
+      "description": "the display is unmarked. Unlocked. Includes a case.",
+      "true_price": 198.95,
+      "ridge_price": 73.7
+    },
+    {
+      "split": "new_wording",
+      "meaning": "bad",
+      "description": "the display is smashed. Unlocked. Includes a case.",
+      "true_price": 37.26,
+      "ridge_price": 73.7
+    }
+  ]
+}
