@@ -73,8 +73,8 @@ a real GPU memory/gradient smoke test before full E2B runs.
     included = [
         ROOT / "README.md",
         ROOT / "pyproject.toml",
-        ROOT / "docs/kaggle-quickstart.md",
-        ROOT / "docs/experiment-design.md",
+        ROOT / "docs/blog.md",
+        ROOT / "docs/notes.md",
         ROOT / "scripts/fetch_mercari.py",
         ROOT / "scripts/kaggle_preflight.py",
         ROOT / "scripts/run_kaggle_preflight.py",
