@@ -31,36 +31,21 @@ def build(destination):
             "language_info": {"name": "python"},
         },
         "cells": [
-            cell("markdown", """# Check Kaggle for the Gemma E2B experiment
+            cell("markdown", """# Check the Kaggle runtime
 
 This checks the runtime only. It does not install packages, download model weights,
-or start training. The tiny CUDA check and runtime startup can consume a small
-amount of your Kaggle GPU quota. No password or API token is needed.
+or start training. The CUDA check can use a little GPU quota. No password or API
+token is needed.
 
 1. Sign in to Kaggle and import this notebook.
-2. Keep the notebook private. In Settings / Session options, enable Internet.
-3. Select GPU T4 x2 if available; otherwise P100. Complete Kaggle's own account
-   verification if it asks. Leave TPU unselected for this PyTorch experiment.
-4. Run the cell below and copy its JSON output back to Codex.
-5. Also report the remaining GPU quota shown in Kaggle, then stop the session.
+2. Keep the notebook private, and enable Internet in the session options.
+3. Select one GPU T4. Two T4 chips do not share memory. Leave TPU unselected.
+4. Run the cell. The JSON is saved as `/kaggle/working/kaggle-preflight.json`.
 
-Two T4 GPUs do not automatically combine their memory. We will choose the
-training setup after seeing the allocated hardware and installed CUDA software.
+The JSON has package versions and whether a GPU is present. It does not include
+passwords or listing rows.
 """),
             cell("code", notebook_source),
-            cell("markdown", """## What comes next
-
-The JSON is also saved as `/kaggle/working/kaggle-preflight.json` on Kaggle.
-Share that output or file; it contains versions, GPU information, and public
-metadata connection checks. It does not intentionally collect account IDs,
-environment variables, passwords, tokens, or dataset rows.
-
-The source bundle is for the next training step; you do not need to attach it to
-run this check. It contains code and aggregate reports, without credentials,
-model weights, or source dataset rows. It is not yet a validated T4/P100 training
-package. The current training code still needs low-memory training support and
-a real GPU memory/gradient smoke test before full E2B runs.
-"""),
         ],
     }
     for index, notebook_cell in enumerate(notebook["cells"]):
@@ -77,7 +62,6 @@ a real GPU memory/gradient smoke test before full E2B runs.
         ROOT / "scripts/fetch_mercari.py",
         ROOT / "scripts/kaggle_preflight.py",
         ROOT / "scripts/run_kaggle_preflight.py",
-        ROOT / "scripts/probe_kaggle_session.py",
         ROOT / "scripts/build_kaggle_bundle.py",
         ROOT / "results/data-provenance.json",
         ROOT / "results/data-manifest.json",

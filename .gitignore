@@ -24,11 +24,18 @@ mlruns/
 results/kaggle-pilot-output/hf-home/
 results/kaggle-pilot-output/gemma-tabular-lab/
 
-# Notebook session probes. The measured scores live in the report files.
+# Notebook session probes and lab status dumps. The measured scores live in the report files.
 results/kaggle-browser-*.json
 results/kaggle-ui-recheck.json
 results/kaggle-run-all-recheck.json
 results/kaggle-direct-session-check.json
 results/kaggle-latest-environment-check.json
 results/kaggle-access-check.json
+results/kaggle-verified-gpu-*.json
 results/gpu-access-recheck.json
+results/budget-status.json
+results/pilot-analysis.json
+results/e2b-regression-smoke.json
+results/**/*-status.json
+results/**/adapter/README.md
+results/kaggle-synthetic-output/gemma-tabular-lab/

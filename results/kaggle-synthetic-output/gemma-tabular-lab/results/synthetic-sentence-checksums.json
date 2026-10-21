@@ -1,6 +1,0 @@
-{
-  "train.jsonl": "1effc7bac223720ed3f0bf5e8154696d5cdd3c8edd758962d93845462a4a80a5",
-  "validation.jsonl": "64571f3a13196a1864c1dbd2abddd14c383ab6075d26c21418358cf8b57e8123",
-  "test.jsonl": "e21e0541e424bbea06e0173accdb9a35a63f6418c09b342067227a3f4e039540",
-  "manifest.json": "e50efb6106da66b20ab6bb488e66fcb27afab60f31a38b8c461c3c800445f900"
-}
